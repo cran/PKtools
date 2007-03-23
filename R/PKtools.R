@@ -1361,7 +1361,7 @@ class(x)))
 
 
 HTMLtools.PKNLME <-function (x=x, nameData = nameData, nameDir=nameDir, 
-    nameFile = nameFile, descStructure = descStructure,drive=X11,...) 
+    nameFile = nameFile, descStructure=list(pcts=c(0.025,0.05,0.95,0.975),nsig=4), drive=X11,...) 
 { 
 library(R2HTML)
 
@@ -1515,7 +1515,7 @@ dev.off()
     } 
 
 HTMLtools.NONMEM <- function (x = x, nameData = nameData, nameDir = nameDir,
-nameFile = nameFile, descStructure = descStructure,drive=X11,...) {
+nameFile = nameFile, descStructure = list(pcts=c(0.025,0.05,0.95,0.975),nsig=4),drive=X11,...) {
 
 library(R2HTML)
 drive()
@@ -1664,7 +1664,7 @@ dev.off()
     }
 
 HTMLtools.WinBUGS<- function (x = x, nameData = nameData, nameDir= nameDir, 
-nameFile = nameFile, descStructure = descStructure, drive=X11 ,...) { 
+nameFile = nameFile, descStructure = list(pcts=c(0.025,0.05,0.95,0.975),nsig=4), drive=X11 ,...) { 
 
 library(R2HTML)
 drive()

@@ -38,6 +38,7 @@ Version 1.4 User Manual.", Imperial College School of Medicine:London.
 if (.Platform$OS.type =="windows"){
 library(PKtools)
 library(nlme)
+out<-0
 curwd=getwd()
 if (file.exists("C:/bugsR")) {
 setwd("C:/bugsR")
@@ -117,7 +118,8 @@ WB2<-RunWB(inputStructure="theosw.txt", data=data, nameData=nameData, WBargs=WBa
   setwd(curwd)
   }
 else {
-  return("You do not have C:/BugsR directory.") 
+  print("You do not have C:/BugsR directory.") 
+  out<-1
   }
 
 #NLME code model 5
@@ -165,9 +167,10 @@ results5<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
 setwd(curwd)
   }
   else {
-    return("You do not have NONMEM.")
+    print("You do not have NONMEM.")
+    out<-1
     } 
-print(try(paramEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2))) 
+if (out==0) print(try(paramEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2))) 
 }
 }
 

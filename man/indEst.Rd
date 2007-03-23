@@ -41,7 +41,7 @@ Medicine:London.
 if (.Platform$OS.type =="windows"){
 library(PKtools)
 library(nlme)
-
+out<-0
 curwd=getwd()
 if (file.exists("C:/bugsR")) {
   setwd("C:/bugsR")
@@ -120,7 +120,8 @@ if (file.exists("C:/bugsR")) {
   setwd(curwd)
   }
 else {
-   return("You do not have C:/BugsR directory.")
+   print("You do not have C:/BugsR directory.")
+   out<-1
    }
 #NLME code model 5
 library(nlme) 
@@ -165,10 +166,11 @@ if (file.exists("C:/nmv/run")) {
   results5<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
   setwd(curwd)
   }
-else {
-return("You do not have NONMEM.")
-  } 
-print(try(indEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2, outputType="R"))) 
+  else {
+  print("You do not have NONMEM.")
+  out<-1
+    } 
+if (out==0) print(try(indEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2, outputType="R"))) 
 }
 }
 
