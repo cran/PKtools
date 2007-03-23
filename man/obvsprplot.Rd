@@ -53,20 +53,23 @@ by including the following code.
 
 \examples{
 if (.Platform$OS.type =="windows"){
-setwd("C:/nmv/run")
 library(PKtools)
 library(nlme) 
-data(Theoph) 
-Theoph<-Theoph[Theoph$Time!=0,]
-id<-as.numeric(as.character(Theoph$Subject)) 
-dose<-Theoph$Dose
-time<-Theoph$Time 
-conc<-round(sqrt(Theoph$conc),4)
-Theo<-data.frame(cbind(id,dose,time,conc))
-names(Theo)<-c("id","dose","time","conc") 
-wt.v<-Theoph$Wt
 
-nameData<-list(covnames=c("wt"),
+curwd=getwd()
+if (file.exists("C:/nmv/run")) {
+  setwd("C:/nmv/run")
+  data(Theoph) 
+  Theoph<-Theoph[Theoph$Time!=0,]
+  id<-as.numeric(as.character(Theoph$Subject)) 
+  dose<-Theoph$Dose
+  time<-Theoph$Time 
+  conc<-round(sqrt(Theoph$conc),4)
+  Theo<-data.frame(cbind(id,dose,time,conc))
+  names(Theo)<-c("id","dose","time","conc") 
+  wt.v<-Theoph$Wt
+
+  nameData<-list(covnames=c("wt"),
                yvarlab="Sqrt(Theop. Conc.) Sqrt(mg/L)",
                xvarlab="Time since dose (hrs)",
                reparams=c("Ka", "V", "Cl"),
@@ -75,9 +78,14 @@ nameData<-list(covnames=c("wt"),
                varnames=c("D[1,1]","D[1,2]","D[2,2]","D[1,3]","D[2,3]","D[3,3]")
                )
 
-data<-list(pkvar=Theo, cov=wt.v)
-NM<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
-obvsprplot(NM, "p")
+  data<-list(pkvar=Theo, cov=wt.v)
+  NM<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
+  obvsprplot(NM, "p")
+  setwd(curwd)
+  }
+  else{
+      "You do not have NONMEM."
+      }
 }
 }
 \keyword{ hplot }% 

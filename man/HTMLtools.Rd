@@ -11,7 +11,7 @@ and diagnostic plots from an object of class NONMEM, PKNLME, or WinBUGS
 for a single dose population PK model with hierarchical data.
 }
 \usage{
-HTMLtools(x, nameData, nameDir, nameFile, descStructure, ...)
+HTMLtools(x, nameData, nameDir, nameFile, descStructure, drive, ...)
 }
 %- maybe also `usage' for other objects documented here.
 \arguments{
@@ -20,6 +20,7 @@ HTMLtools(x, nameData, nameDir, nameFile, descStructure, ...)
   \item{nameDir}{the path and name of the directory where the HTML file will reside}
   \item{nameFile}{list of the names of the plots being output to the .html file}
   \item{descStructure}{list of arguments (pcts,nsig) for the function desc}
+  \item{drive}{graphics drive; the default is X11()}
   \item{...}{additional arguments to be passed to lower level functions}
 }
 \details{
@@ -100,7 +101,7 @@ MM<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
 
 HTMLtools(x=MM, nameData = nameData, nameDir=tempdir(), nameFile = nameFile, 
-       descStructure = descStructure) 
+       descStructure = descStructure, drive=X11) 
 }
 
 \keyword{ models }% 

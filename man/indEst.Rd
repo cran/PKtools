@@ -37,31 +37,34 @@ Medicine:London.
 \author{M.S. Blanchard <sblanchard@coh.org>}
 \seealso{RunNM, RunNLME, RunWB}
 \examples{
+
 if (.Platform$OS.type =="windows"){
 library(PKtools)
 library(nlme)
-memory.limit(size=1000)
-setwd("C:/bugsR")
-data(Theoph) 
-Theoph<-Theoph[Theoph$Time!=0,]
-id<-as.numeric(as.character(Theoph$Subject)) 
-dose<-Theoph$Dose
-time<-Theoph$Time 
-conc<-round(sqrt(Theoph$conc),4)
-sid<-split(id,id) 
-hist<-sapply(sid,length) 
-n.ind<-12
-off.data<-matrix(NA,n.ind+1,1)
-off.data[1,1]<-1
-for (i in 2:(n.ind+1)) off.data[i,1]<-off.data[i-1,1]+ hist[i-1]
-off.data<-c(off.data)
-mean <- c(.5, -.6, -3)
-R<-structure(.Data=diag(rep(.01,3)))
-prec<-structure(.Data=diag(rep(.000001,3)))
-data<-list(n.ind=n.ind,off.data=off.data,dose=dose,conc=conc,
-time=time,mean=mean,R=R,prec=prec)
 
-inits<- function(){
+curwd=getwd()
+if (file.exists("C:/bugsR")) {
+  setwd("C:/bugsR")
+  data(Theoph) 
+  Theoph<-Theoph[Theoph$Time!=0,]
+  id<-as.numeric(as.character(Theoph$Subject)) 
+  dose<-Theoph$Dose
+  time<-Theoph$Time 
+  conc<-round(sqrt(Theoph$conc),4)
+  sid<-split(id,id) 
+  hist<-sapply(sid,length) 
+  n.ind<-12
+  off.data<-matrix(NA,n.ind+1,1)
+  off.data[1,1]<-1
+  for (i in 2:(n.ind+1)) off.data[i,1]<-off.data[i-1,1]+ hist[i-1]
+  off.data<-c(off.data)
+  mean <- c(.5, -.6, -3)
+  R<-structure(.Data=diag(rep(.01,3)))
+  prec<-structure(.Data=diag(rep(.000001,3)))
+  data<-list(n.ind=n.ind,off.data=off.data,dose=dose,conc=conc,
+  time=time,mean=mean,R=R,prec=prec)
+
+  inits<- function(){
     list(beta = structure(
         .Data = c(rep(.5,12),rep(-.6,12),rep(-3,12)),
         .Dim = c(12, 3)),
@@ -71,7 +74,7 @@ inits<- function(){
                                   0, 0, 0.1), .Dim = c(3, 3)),
         tauC = 20)
 
-list(beta = structure(
+    list(beta = structure(
         .Data = c(rep(-.5,12),rep(-.8,12),rep(-3.5,12)),
         .Dim = c(12, 3)),
         mu = c(-.5, -.8,  -3.5),
@@ -80,7 +83,7 @@ list(beta = structure(
                                   0, 0, 0.1), .Dim = c(3, 3)),
         tauC = 20)
 
-list(beta = structure(
+    list(beta = structure(
         .Data = c(rep(1.5,12),rep(-.4,12),rep(-2.8,12)),
         .Dim = c(12, 3)),
         mu = c(1.5, -.4,  -2.8),
@@ -89,15 +92,15 @@ list(beta = structure(
                                   0, 0, 0.1), .Dim = c(3, 3)),
         tauC = 20)
 
-}
+  }
 
-#covariates 
-wt.v<-Theoph$Wt
+  #covariates 
+  wt.v<-Theoph$Wt
 
-parameters <-
-c("sigma2","ka","cl","v","beta","mu","itau","ipredwb","ppredwb")
+  parameters <-
+  c("sigma2","ka","cl","v","beta","mu","itau","ipredwb","ppredwb")
 
-nameData<-list(covnames=c("wt"),
+  nameData<-list(covnames=c("wt"),
                yvarlab="Sqrt(Theop. Conc.) Sqrt(mg/L)",
                xvarlab="Time since dose (hrs)",
                params=c("Ka", "V", "Cl"),
@@ -108,14 +111,17 @@ nameData<-list(covnames=c("wt"),
                )
 
 
-data<-list(data=data, cov=wt.v, id=id)
+  data<-list(data=data, cov=wt.v, id=id)
 
-WBargs<-list(parameters=parameters, inits=inits, n.chains=3,
+  WBargs<-list(parameters=parameters, inits=inits, n.chains=3,
              n.iter=12000, n.burnin=4000, n.thin=3, debug=T)
 
-WB2<-RunWB(inputStructure="theosw.txt", data=data, nameData=nameData, WBargs=WBargs)
-
-
+  WB2<-RunWB(inputStructure="theosw.txt", data=data, nameData=nameData, WBargs=WBargs)
+  setwd(curwd)
+  }
+else {
+   return("You do not have C:/BugsR directory.")
+   }
 #NLME code model 5
 library(nlme) 
 data(Theoph) 
@@ -144,9 +150,10 @@ results.nlme5<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
  
 #NONMEM code model 5
-setwd("C:/nmv/run")
-
-nameData<-list(covnames=c("wt"), 
+curwd=getwd()
+if (file.exists("C:/nmv/run")) {
+  setwd("C:/nmv/run")
+  nameData<-list(covnames=c("wt"), 
                yvarlab="Sqrt(Theop. Conc.) Sqrt(mg/L)",
                xvarlab="Time since dose (hrs)",
                reparams=c("Ka", "V", "Cl"),
@@ -155,13 +162,15 @@ nameData<-list(covnames=c("wt"),
                varnames=c("D[1,1]","D[1,2]","D[1,3]","D[2,2]","D[2,3]","D[3,3]")
                )
 
-results5<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
+  results5<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
+  setwd(curwd)
+  }
+else {
+return("You do not have NONMEM.")
+  } 
+print(try(indEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2, outputType="R"))) 
+}
+}
 
-###############################
-#population parameter estimates
-###############################
-indEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2, outputType="R") 
-}
-}
 
 \keyword{ models }% 

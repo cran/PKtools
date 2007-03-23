@@ -33,57 +33,59 @@ Theoretic Approach (2nd edition). Springer: New York.}
 \seealso{AIC}
 \examples{
 if (.Platform$OS.type =="windows"){
-#NLME code models 3 and 6
-library(PKtools)
+  library(PKtools)
+  library(nlme)  
+curwd=getwd()
+if (file.exists("C:/nmv/run"))  {
+  setwd("C:/nmv/run")
+  #NLME code models 3 and 6
+  #data definition for NLME and NONMEM
+  data(Theoph) 
+  Theoph<-Theoph[Theoph$Time!=0,]
+  id<-as.numeric(as.character(Theoph$Subject)) 
+  dose<-Theoph$Dose
+  time<-Theoph$Time 
+  conc<-round(sqrt(Theoph$conc),4)
+  Theo<-data.frame(cbind(id,dose,time,conc))
+  names(Theo)<-c("id","dose","time","conc") 
+  wt.v<-Theoph$Wt
+  data<-list(pkvar=Theo, cov=wt.v) 
 
-#data definition for NLME and NONMEM
-library(nlme) 
-data(Theoph) 
-Theoph<-Theoph[Theoph$Time!=0,]
-id<-as.numeric(as.character(Theoph$Subject)) 
-dose<-Theoph$Dose
-time<-Theoph$Time 
-conc<-round(sqrt(Theoph$conc),4)
-Theo<-data.frame(cbind(id,dose,time,conc))
-names(Theo)<-c("id","dose","time","conc") 
-wt.v<-Theoph$Wt
-data<-list(pkvar=Theo, cov=wt.v) 
-
-#model 3
-nameData<-list(covnames=c("wt"), 
+  #model 3
+  nameData<-list(covnames=c("wt"), 
                yvarlab="Sqrt(Theop. Conc.) (mg/L)", 
                xvarlab="Time since dose (hrs)",
                reparams=c("Ka","Cl"),
                params=c("Ka","V int", "V slope", "Cl"),
                tparams=c("log(Ka)","log(V) int"," log(V) slope", "log(CL)"))
+ 
+  model.def<-list(fixed.model=list(lKa~1,lV~wt,lCl~1), random.model=lKa+lCl~1,
+  start.lst=c(.3,-.6,0,-3),form=conc~sonecpmt(dose, time, lV, lKa, lCl),
+  control=nlmeControl(returnObject=FALSE))
+  results.nlme3<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
-model.def<-list(fixed.model=list(lKa~1,lV~wt,lCl~1), random.model=lKa+lCl~1,
-start.lst=c(.3,-.6,0,-3),form=conc~sonecpmt(dose, time, lV, lKa, lCl),
-control=nlmeControl(returnObject=FALSE))
-results.nlme3<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
-
-#model 6
-nameData<-list(covnames=c("wt"), 
+  #model 6
+  nameData<-list(covnames=c("wt"), 
                yvarlab="Sqrt(Theop. Conc.) (mg/L)", 
                xvarlab="Time since dose (hrs)",
                reparams=c("Ka","V","Cl"),
                params=c("Ka","V", "Cl"),
                tparams=c("log(Ka)","log(V)","log(CL)"))
 
-model.def<-list(fixed.model=c(lKa+lV+lCl~1),random.model=pdDiag(form=lKa+lV+lCl~1),
-start.lst=c(.5,-.6,-3), form=conc~sonecpmt(dose, time, lV, lKa, lCl),
-control=nlmeControl(returnObject=FALSE))
-results.nlme6<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
+  model.def<-list(fixed.model=c(lKa+lV+lCl~1),random.model=pdDiag(form=lKa+lV+lCl~1),
+  start.lst=c(.5,-.6,-3), form=conc~sonecpmt(dose, time, lV, lKa, lCl),
+  control=nlmeControl(returnObject=FALSE))
+  results.nlme6<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
 
  
-#NONMEM code models 3 and 6 
-#note control files must be placed in the C:/nmv/run directory
-setwd("C:/nmv/run")
+  #NONMEM code models 3 and 6 
+  #note control files must be placed in the C:/nmv/run directory
 
-#model 3
-nameData<-list(covnames=c("wt"), 
+
+  #model 3
+  nameData<-list(covnames=c("wt"), 
                yvarlab="Sqrt(Theop. Conc.) Sqrt(mg/L)",
                xvarlab="Time since dose (hrs)",
                reparams=c("Ka", "Cl"),
@@ -92,11 +94,11 @@ nameData<-list(covnames=c("wt"),
                varnames=c("D[1,1]","D[1,2]","D[2,2]")   
                )
 
-results3<-RunNM(inputStructure="control.model3", data=data, nameData=nameData)
+  results3<-RunNM(inputStructure="control.model3", data=data, nameData=nameData)
 
 
-#model 6
-nameData<-list(covnames=c("wt"), 
+  #model 6
+  nameData<-list(covnames=c("wt"), 
                yvarlab="Sqrt(Theop. Conc.) Sqrt(mg/L)",
                xvarlab="Time since dose (hrs)",
                reparams=c("Ka", "V", "Cl"),
@@ -105,12 +107,17 @@ nameData<-list(covnames=c("wt"),
                varnames=c("D[1,1]","D[1,2]","D[2,2]","D[1,3]","D[2,3]","D[3,3]")
                )
 
-results6<-RunNM(inputStructure="control.model6", data=data, nameData=nameData)
+  results6<-RunNM(inputStructure="control.model6", data=data, nameData=nameData)
 
-#Multimodel Code
-PKNLMEobjects=list(results.nlme3,results.nlme6)
-NONMEMobjects=list(results3,results6)
-AICcomp(PKNLMEobjects=PKNLMEobjects, NONMEMobjects=NONMEMobjects)
+  #Multimodel Code
+  PKNLMEobjects=list(results.nlme3,results.nlme6)
+  NONMEMobjects=list(results3,results6)
+  print(AICcomp(PKNLMEobjects=PKNLMEobjects, NONMEMobjects=NONMEMobjects))
+  setwd(curwd)
+  }
+  else{
+    "You do not have NONMEM."
+  }
 }
 }
 

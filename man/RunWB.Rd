@@ -59,7 +59,9 @@ Medicine:London.
 \examples{ 
 
 if (.Platform$OS.type =="windows"){
-memory.limit(size=1000)
+
+curwd=getwd()
+if (file.exists("C:/bugsR")) {
 setwd("C:/bugsR")
 library(PKtools)
 library(nlme)
@@ -135,7 +137,12 @@ WBargs<-list(parameters=parameters, inits=inits, n.chains=3,
              n.iter=12000, n.burnin=4000, n.thin=3, debug=T)
       
 WB<-RunWB(inputStructure="theosw.txt", data=data, nameData=nameData, WBargs=WBargs) 
-WB
+print(WB)
+setwd(curwd)
+}
+else{
+    "You do not have the C:/BugsR directory."
+    }
 }
 }
 

@@ -38,7 +38,8 @@ Version 1.4 User Manual.", Imperial College School of Medicine:London.
 if (.Platform$OS.type =="windows"){
 library(PKtools)
 library(nlme)
-memory.limit(size=1000)
+curwd=getwd()
+if (file.exists("C:/bugsR")) {
 setwd("C:/bugsR")
 data(Theoph) 
 Theoph<-Theoph[Theoph$Time!=0,]
@@ -113,6 +114,11 @@ WBargs<-list(parameters=parameters, inits=inits, n.chains=3,
 
 WB2<-RunWB(inputStructure="theosw.txt", data=data, nameData=nameData, WBargs=WBargs)
 
+  setwd(curwd)
+  }
+else {
+  return("You do not have C:/BugsR directory.") 
+  }
 
 #NLME code model 5
 library(nlme) 
@@ -142,6 +148,8 @@ results.nlme5<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
  
 #NONMEM code model 5
+curwd=getwd()
+if (file.exists("C:/nmv/run")) {
 setwd("C:/nmv/run")
 
 nameData<-list(covnames=c("wt"), 
@@ -154,11 +162,12 @@ nameData<-list(covnames=c("wt"),
                )
 
 results5<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
-
-###############################
-#population parameter estimates
-###############################
-paramEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2) 
+setwd(curwd)
+  }
+  else {
+    return("You do not have NONMEM.")
+    } 
+print(try(paramEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2))) 
 }
 }
 

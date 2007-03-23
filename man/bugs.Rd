@@ -115,30 +115,31 @@ Gelman, A. and Carlin, J.B. and Stern, H.S. and Rubin, D.B.  (2003).
 
 \examples{
 if (.Platform$OS.type =="windows"){
-memory.limit(size=1000)
-setwd("C:/bugsR")
 library(PKtools)
 library(nlme)
-data(Theoph)
-Theoph<-Theoph[Theoph$Time!=0,]
-id<-as.numeric(as.character(Theoph$Subject))
-dose<-Theoph$Dose
-time<-Theoph$Time
-conc<-round(sqrt(Theoph$conc),4)
-sid<-split(id,id)
-hist<-sapply(sid,length)
-n.ind<-12
-off.data<-matrix(NA,n.ind+1,1)
-off.data[1,1]<-1
-for (i in 2:(n.ind+1)) off.data[i,1]<-off.data[i-1,1]+ hist[i-1]
-off.data<-c(off.data)
-mean <- c(.5, -.6, -3)
-R<-structure(.Data=diag(rep(.1,3)))
-prec<-structure(.Data=diag(rep(.000001,3)))
-data<-list(n.ind=n.ind,off.data=off.data,dose=dose,conc=conc,
+curwd=getwd()
+if (file.exists("C:/bugsR")) {
+  setwd("C:/bugsR")
+  data(Theoph)
+  Theoph<-Theoph[Theoph$Time!=0,]
+  id<-as.numeric(as.character(Theoph$Subject))
+  dose<-Theoph$Dose
+  time<-Theoph$Time
+  conc<-round(sqrt(Theoph$conc),4)
+  sid<-split(id,id)
+  hist<-sapply(sid,length)
+  n.ind<-12
+  off.data<-matrix(NA,n.ind+1,1)
+  off.data[1,1]<-1
+  for (i in 2:(n.ind+1)) off.data[i,1]<-off.data[i-1,1]+ hist[i-1]
+  off.data<-c(off.data)
+  mean <- c(.5, -.6, -3)
+  R<-structure(.Data=diag(rep(.1,3)))
+  prec<-structure(.Data=diag(rep(.000001,3)))
+  data<-list(n.ind=n.ind,off.data=off.data,dose=dose,conc=conc,
   time=time,mean=mean,R=R,prec=prec)
 
-inits<- function(){
+  inits<- function(){
     list(beta = structure(
         .Data = c(rep(.5,12),rep(-.6,12),rep(-3,12)),
         .Dim = c(12, 3)), 
@@ -148,7 +149,7 @@ inits<- function(){
                                   0, 0, 0.1), .Dim = c(3, 3)),
         tauC = 20)
 
-list(beta = structure(
+    list(beta = structure(
         .Data = c(rep(-.5,12),rep(-.8,12),rep(-3.5,12)),
         .Dim = c(12, 3)), 
         mu = c(-.5, -.8,  -3.5), 
@@ -157,7 +158,7 @@ list(beta = structure(
                                   0, 0, 0.1), .Dim = c(3, 3)),
         tauC = 20)
 
-list(beta = structure(
+    list(beta = structure(
         .Data = c(rep(1.5,12),rep(-.4,12),rep(-2.8,12)),
         .Dim = c(12, 3)), 
         mu = c(1.5, -.4,  -2.8), 
@@ -166,15 +167,21 @@ list(beta = structure(
                                   0, 0, 0.1), .Dim = c(3, 3)),
         tauC = 20)
 
-}
+  }
 
-parameters <- c("sigma2","ka","cl","v","beta","mu","re","itau","ipredwb","ppredwb")
+  parameters <- c("sigma2","ka","cl","v","beta","mu","re","itau","ipredwb","ppredwb")
 
-theo.sim <- bugs(data = data, inits = inits,
+  theo.sim <- bugs(data = data, inits = inits,
         parameters.to.save = parameters, model.file = "theosw.txt",
         n.chains = 3, n.iter = 12000, debug = T,
         n.burnin = 4000 , n.thin = 8 , print.summary = F,
         plot.summary = T)
+  print(names(theo.sim)) 
+  setwd(curwd)
+  }
+else{
+    "You do not have a C:/BugsR directory."
+    }
 }
 }
 \keyword{ models }

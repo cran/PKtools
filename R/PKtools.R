@@ -1361,11 +1361,12 @@ class(x)))
 
 
 HTMLtools.PKNLME <-function (x=x, nameData = nameData, nameDir=nameDir, 
-    nameFile = nameFile, descStructure = descStructure,...) 
+    nameFile = nameFile, descStructure = descStructure,drive=X11,...) 
 { 
 library(R2HTML)
-X11()
 
+drive()
+#get(getOption("device"))()
 
 cat ("Results written to", nameDir, "\n")
 
@@ -1510,15 +1511,15 @@ if (!is.null(x$cov.id)) HTMLInsertGraph("re1.png", Caption="Individual Random ef
 HTMLInsertGraph("diagtrplti.png", Caption="Individual Predicted and Observed Values vs Time",file = file.app)   
 HTMLInsertGraph("diagtrpltp.png", Caption="Population Predicted and Observed Values vs Time",file = file.app)   
 HTMLEndFile()
+dev.off()
     } 
 
 HTMLtools.NONMEM <- function (x = x, nameData = nameData, nameDir = nameDir,
-nameFile = nameFile, descStructure = descStructure,...) {
+nameFile = nameFile, descStructure = descStructure,drive=X11,...) {
 
 library(R2HTML)
-
-X11()
-
+drive()
+#get(getOption("device"))()
 
 cat ("Results written to", nameDir, "\n")
 
@@ -1659,15 +1660,15 @@ if (!is.null(x$cov)) HTMLInsertGraph("re1.png", Caption="Individual Random effec
 HTMLInsertGraph("diagtrplti.png", Caption="Individual Predicted and Observed Values vs Time",file = file.app)
 HTMLInsertGraph("diagtrpltp.png", Caption="Population Predicted and Observed Values vs Time",file = file.app)
 HTMLEndFile()
+dev.off()
     }
 
 HTMLtools.WinBUGS<- function (x = x, nameData = nameData, nameDir= nameDir, 
-nameFile = nameFile, descStructure = descStructure,...) { 
+nameFile = nameFile, descStructure = descStructure, drive=X11 ,...) { 
 
 library(R2HTML)
-
-X11()
-
+drive()
+#get(getOption("device"))()
 
 cat ("Results written to", nameDir, "\n")
 
@@ -1861,6 +1862,7 @@ if (!is.null(x$cov.id)) HTMLInsertGraph("re1.png", Caption="Individual Random ef
 HTMLInsertGraph("diagtrplti.png", Caption="Individual Predicted and Observed Values vs Time",file = file.app)
 HTMLInsertGraph("diagtrpltp.png", Caption="Population Predicted and Observed Values vs Time",file = file.app)
 HTMLEndFile()
+dev.off()
     }
 
 
@@ -1868,11 +1870,11 @@ HTMLEndFile()
 
 
 HTMLtools<-function (x = x, nameData = nameData, nameDir= nameDir, 
-nameFile = nameFile, descStructure = descStructure,...)
+nameFile = nameFile, descStructure = descStructure,drive=X11,...)
 UseMethod("HTMLtools")
 
 HTMLtools.default <- function (x = x, nameData = nameData, nameDir= nameDir, 
-nameFile = nameFile, descStructure = descStructure,...)
+nameFile = nameFile, descStructure = descStructure,drive=X11,...)
 stop(paste("HTMLtools method does not yet exist for instances of class",
 class(x)))
 
