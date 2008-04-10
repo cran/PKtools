@@ -15,7 +15,7 @@ indEst(PKNLMEobject, NMobject, WBobject, outputType)
   \item{WBobject}{WinBUGS object from RunWB}
   \item{outputType}{"tex" or "R" outputs are available}
 }
-\details{The PKNLME, NM and WB objects should all be from the same model}
+\details{The PKNLME, NM and WB objects should all be from the same model
 }
 
 \value{The output is a dataframe of the indiviudal parameter estimates.
@@ -114,7 +114,7 @@ if (file.exists("C:/bugsR")) {
   data<-list(data=data, cov=wt.v, id=id)
 
   WBargs<-list(parameters=parameters, inits=inits, n.chains=3,
-             n.iter=12000, n.burnin=4000, n.thin=3, debug=T)
+             n.iter=12000, n.burnin=4000, n.thin=3, debug=TRUE)
 
   WB2<-RunWB(inputStructure="theosw.txt", data=data, nameData=nameData, WBargs=WBargs)
   setwd(curwd)

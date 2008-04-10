@@ -11,25 +11,19 @@ and diagnostic plots from an object of class NONMEM, PKNLME, or WinBUGS
 for a single dose population PK model with hierarchical data.
 }
 \usage{
-HTMLtools(x, nameData, nameDir, nameFile, descStructure, drive, ...)
+HTMLtools(x, nameDir, nameFile, descStructure, ...)
 }
 %- maybe also `usage' for other objects documented here.
 \arguments{
   \item{x}{an object from one of the following classes NONMEM, PKNLME, or WinBUGS}
-  \item{nameData}{list of names, including, covnames, yvarlab, xvarlab, paramester names}
   \item{nameDir}{the path and name of the directory where the HTML file will reside}
   \item{nameFile}{list of the names of the plots being output to the .html file}
   \item{descStructure}{list of arguments (pcts,nsig) for the function desc}
-  \item{drive}{graphics drive; the default is X11()}
   \item{...}{additional arguments to be passed to lower level functions}
 }
 \details{
 RunNM, RunNLME, and RunWB create the objects of the respective classes NONMEM, PKNLME and WinBUGS 
 that can be read by this method.
-
-nameData is a list of the labels including the names of the covariates in the order
-there are given in the covariate dataset, y and x variable, the parameters names as 
-defined by RunNM, RunNLME, and RunWB.
 
 nameFile lists the name of the output html file and the names of the plots being output to the html file.
 Note the html file name should not have an html extension that will be added by the program and 
@@ -44,7 +38,6 @@ file7="diagtrpltp.wb")
 }
 
 Finally for the HTML file to be in color the correct path must be given in nameDir.
-
 }
 
 
@@ -53,8 +46,8 @@ An HTML file of the results from the selected object.
 
 The trellis plots including those from trplot, diagtrplot output only the first page of plots to the
 HTML file and a png file of all pages is also created. The covariate plot allows for up
-to 16 covariates again printing the first page in the HTML file and any additional plots are sent to 
-an accompanying png file.
+to 16 covariates again printing the first page in the HTML file. The covariates will be printed in order for
+each random effect.
 }
 
 
@@ -100,8 +93,8 @@ an accompanying png file.
 MM<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
 
-HTMLtools(x=MM, nameData = nameData, nameDir=tempdir(), nameFile = nameFile, 
-       descStructure = descStructure, drive=X11) 
+HTMLtools(x=MM, nameDir=tempdir(), nameFile = nameFile, 
+       descStructure = descStructure) 
 }
 
 \keyword{ models }% 

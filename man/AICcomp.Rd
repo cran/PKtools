@@ -5,7 +5,7 @@
 \description{
 AICcomp  calculates and or prints the AIC, AICc (small
 sample AIC) and the loglikelihood from NONMEM and NLME for each
-of any number of models}
+of any number of models
 }
 \usage{
 AICcomp(PKNLMEobjects, NONMEMobjects)

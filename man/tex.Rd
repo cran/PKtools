@@ -11,12 +11,11 @@ and diagnostic plots from an object of class NONMEM, PKNLME, or WinBUGS
 for a single dose population PK model with hierarchical data.
 }
 \usage{
-tex(x, nameData, nameDir, nameFile, descStructure,...)
+tex(x, nameDir, nameFile, descStructure,...)
 }
 %- maybe also `usage' for other objects documented here.
 \arguments{
   \item{x}{an object from one of the following classes NONMEM, PKNLME, or WinBUGS}
-  \item{nameData}{list of names, including, covnames, yvarlab, xvarlab, and parameter names}
   \item{nameDir}{the path and name of the directory where the HTML file will reside}
   \item{nameFile}{lists the name of the tex file and of the plots being output to the .tex file}
   \item{descStructure}{list of variables (pcts,nsig) for the function desc}
@@ -25,10 +24,6 @@ tex(x, nameData, nameDir, nameFile, descStructure,...)
 \details{
 RunNM, RunNLME, and RunWB create the NONMEM, PKNLME and WinBUGS 
 objects NM, MM, and WB,respectively, that can be read by this method.
-
-nameData is a list of the labels including the names of the covariates in the order
-they are given in the covariate dataset, y and x variable, and parameter names as 
-listed for the funtions RunNLME, RunNM, or RunWB.
 
 nameFile lists the name of the tex file and the names of the plots being output to .tex file.
 note the tex file should have a tex extension and the plots should have a ps extension.  Finally,
@@ -46,7 +41,7 @@ A tex file of the results from the selected object.
 
 The trellis plots including those from trplt, diagtrplt output the first page of plots to the
 tex file and all pages to an accompanying postscript file. The covariate plot allows for up
-to 16 covariates also printing the first page in the tex file and any additional plots to an  
+to 16 covariates. printing the first page in the tex file and any additional plots to an  
 accompanying postscript file.
 }
 
@@ -92,8 +87,7 @@ lV, lKa, lCl), control=nlmeControl(returnObject=FALSE))
 MM<-RunNLME(inputStructure=model.def, data=data, 
 nameData=nameData)
 
-tex(MM, nameData = nameData, nameDir=tempdir(),
-    nameFile = nameFile, descStructure = descStructure) 
+tex(MM, nameDir=tempdir(), nameFile = nameFile, descStructure = descStructure) 
 }
 
 

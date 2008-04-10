@@ -45,7 +45,7 @@ by including the following code.
   population (marginal) and individual (conditional) 
   levels.
 }
-}
+
 
 \author{M.S. Blanchard <sblanchard@coh.org>}
 

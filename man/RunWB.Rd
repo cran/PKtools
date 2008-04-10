@@ -17,7 +17,7 @@ RunWB(inputStructure, data, nameData, WBargs)
   \item{WBargs}{Additional arguements required to run WinBUGS, including
   parameters- the list of parameters to be sampled, initial values (inits),
   n.chain- number of chains, n.iter-number of iterations, n.burnin- length of the
-  burnin, n.thin, and debug-T/F if T the run will stop at the end of the WinBUGS
+  burnin, n.thin, and debug-TRUE/FALSE if TRUE the run will stop at the end of the WinBUGS
   run to allow use of WinBUGS to study mixing and convergence.}
 }
 
@@ -134,7 +134,7 @@ nameData<-list(covnames=c("wt"),
 data<-list(data=data, cov=wt.v, id=id)
 
 WBargs<-list(parameters=parameters, inits=inits, n.chains=3, 
-             n.iter=12000, n.burnin=4000, n.thin=3, debug=T)
+             n.iter=12000, n.burnin=4000, n.thin=3, debug=TRUE)
       
 WB<-RunWB(inputStructure="theosw.txt", data=data, nameData=nameData, WBargs=WBargs) 
 print(WB)
