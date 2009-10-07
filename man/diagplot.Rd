@@ -1,8 +1,8 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{diagplot}
-\alias{diagplot}
+\alias{diagplot} 
+\alias{diagplot.PKNLME} 
 \alias{diagplot.NONMEM}
-\alias{diagplot.PKNLME}
 \alias{diagplot.WinBUGS}
 \title{diagplot}
 \description{
@@ -27,9 +27,7 @@ diagplot(x,...)
 }
 
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
-
-\seealso{\code{\link{residplot}}, \code{\link{obvsprplot}}, \code{\link{identify}}}
+\author{M.S. Blanchard <sblanchard.coh.org>}
 
 \examples{
 if (.Platform$OS.type =="windows"){
@@ -67,4 +65,6 @@ if (file.exists("C:/nmv/run")) {
     } 
 }
 }
+
+
 \keyword{ hplot }% 

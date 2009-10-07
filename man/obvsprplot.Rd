@@ -1,8 +1,8 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{obvsprplot}
 \alias{obvsprplot}
+\alias{obvsprplot.PKNLME} 
 \alias{obvsprplot.NONMEM}
-\alias{obvsprplot.PKNLME}
 \alias{obvsprplot.WinBUGS}
 \title{obvsprplot}
 \description{
@@ -11,12 +11,13 @@ individual (conditional) levels of the mixed model the can be used with the
 method identify to identify outliers.
 }
 \usage{
-obvsprplot(x,...)
+obvsprplot(x,level,...)
 }
 
 %- maybe also `usage' for other objects documented here.
 \arguments{
   \item{x}{object of class, NONMEM, PKNLME, WinBUGS}
+  \item{level}{level of mixed model ("p"-population, "i"-individual)}
   \item{...}{additional arguments to be passed to lower level functions}
 }
 \details{
@@ -43,13 +44,11 @@ by including the following code.
 \value{
   plots of observed versus predicted values for both the 
   population (marginal) and individual (conditional) 
-  levels.
-}
+  levels.}
 
+\author{M.S. Blanchard <sblanchard.coh.org>}
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
-
-\seealso{ \code{\link{identify}}, \code{\link{obvsprplot}}, \code{\link{diagplot}}}
+\seealso{ \code{\link{identify}}}
 
 \examples{
 if (.Platform$OS.type =="windows"){
@@ -80,7 +79,7 @@ if (file.exists("C:/nmv/run")) {
 
   data<-list(pkvar=Theo, cov=wt.v)
   NM<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
-  obvsprplot(NM, "p")
+  obvsprplot(NM, level="p")
   setwd(curwd)
   }
   else{
@@ -88,4 +87,5 @@ if (file.exists("C:/nmv/run")) {
       }
 }
 }
+
 \keyword{ hplot }% 

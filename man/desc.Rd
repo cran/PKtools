@@ -1,4 +1,4 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{desc}
 \alias{desc}
 \title{desc}
@@ -6,7 +6,7 @@
 desc calculates select descriptive statistics for the variable X.
 }
 \usage{
-desc(y, pcts, nsig)
+desc(y, pcts=c(0.025,0.05,0.95,0.975), nsig=4)
 }
 
 \arguments{
@@ -20,13 +20,9 @@ range, min, max, and select percentiles.
 }
 
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
-
-\seealso{\code{\link{tex}}}
+\author{M.S. Blanchard <sblanchard.coh.org>}
 
 \examples{
-library(PKtools)
-library(nlme)
 data(Theoph)
 Theoph<-Theoph[Theoph$Time!=0,]
 id<-as.numeric(as.character(Theoph$Subject))

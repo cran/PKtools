@@ -1,4 +1,4 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{pk}
 \alias{pk}
 \title{pk}
@@ -21,14 +21,12 @@ and also creates NMdata, a NONMEM ready data file.
 }
 
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
+\author{M.S. Blanchard<sblanchard.coh.org}
 
 
 \seealso{\code{\link{RunNM}}}
 
 \examples{
-library(PKtools)
-library(nlme)
 data(Theoph)
 Theoph<-Theoph[Theoph$Time!=0,]
 id<-as.numeric(as.character(Theoph$Subject))

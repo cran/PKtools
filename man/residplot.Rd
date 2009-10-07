@@ -1,22 +1,23 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{residplot}
 \alias{residplot}
-\alias{residplot.NONMEM}
 \alias{residplot.PKNLME}
+\alias{residplot.NONMEM} 
 \alias{residplot.WinBUGS}
 \title{residplot}
 \description{
 resid creates individual residual vs predicted plots at the population (marginal) and 
-individual (conditinal) levels of the mixed model the can be used with the 
+individual (conditional) levels of the mixed model the can be used with the 
 method identify to identify outliers.
 }
 \usage{
-residplot(x,...)
+residplot(x,level, ...)
 }
 
 %- maybe also `usage' for other objects documented here.
 \arguments{
   \item{x}{object of class, NONMEM, PKNLME, or WinBUGS}
+  \item{level}{level of mixed model ("p"-population, "i"-individual)}.
   \item{...}{additional arguments to be passed to lower level functions}
 }
 
@@ -50,12 +51,13 @@ by including the following code.
 }
 
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
+\author{M.S. Blanchard <sblanchard.coh.org>}
 
 
-\seealso{\code{\link{identify}}, \code{\link{obvsprplot}}, \code{\link{diagplot}}}
+\seealso{\code{\link{identify}}}
 
 \examples{
+
 if (.Platform$OS.type =="windows"){
 library(PKtools)
 library(nlme) 
@@ -82,12 +84,12 @@ if (file.exists("C:/nmv/run")){
 
   data<-list(pkvar=Theo, cov=wt.v)
   NM<-RunNM(inputStructure="control.model5", data=data, nameData=nameData)
-  residplot(NM, "p")
+  residplot(NM, level="p")
   setwd(curwd)
   }
   else{
       "You do not have NONMEM."
       }
-}
+}
 }
 \keyword{ hplot }% 

@@ -1,4 +1,4 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{RunWB}
 \alias{RunWB}
 \title{RunWB}
@@ -17,7 +17,7 @@ RunWB(inputStructure, data, nameData, WBargs)
   \item{WBargs}{Additional arguements required to run WinBUGS, including
   parameters- the list of parameters to be sampled, initial values (inits),
   n.chain- number of chains, n.iter-number of iterations, n.burnin- length of the
-  burnin, n.thin, and debug-TRUE/FALSE if TRUE the run will stop at the end of the WinBUGS
+  burnin, n.thin, and debug-T/F if T the run will stop at the end of the WinBUGS
   run to allow use of WinBUGS to study mixing and convergence.}
 }
 
@@ -46,18 +46,17 @@ Lunn, D.J. and Wakefield, J. and Thomas, A. and Best, N. and
 Spiegelhalter,D. (1999). PKBugs User Guide (version 1.1). Imperial
 College: London.
 
-Spiegelhalter, D. and Thomas, A. and Best, N. and Lunn D. (2001). "Winbugs
+Spiegelhalter, D. and Thomas, A. and Best, N. (2001). "Winbugs
 Version 1.4 User Manual.", Imperial College School of
 Medicine:London. 
 }
 
 
-\author{M.S. Blanchard<sblanchard@coh.org>}
+\author{M.S. Blanchard <sblanchard@coh.org>}
 
 \seealso{\code{\link{bugs}}, \code{\link{RunNLME}}, \code{\link{RunNM}} }
 
 \examples{ 
-
 if (.Platform$OS.type =="windows"){
 
 curwd=getwd()
@@ -143,7 +142,7 @@ setwd(curwd)
 else{
     "You do not have the C:/BugsR directory."
     }
-}
+}
 }
 
 \keyword{ models }%

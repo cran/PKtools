@@ -1,4 +1,4 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{PKtools.AIC}
 \alias{PKtools.AIC}
 \title{PKtools.AIC}
@@ -20,12 +20,9 @@ as well as the objective function (-2 \eqn{\times}{x} loglikelihood) and K.
 Selection and Multimodel Inference: A Practical Information -
 Theoretic Approach (2nd edition). Springer: New York. }
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
-
-\seealso{\code{\link{tex}}, \code{\link{HTMLtools}}}
+\author{M.S. Blanchard <sblanchard.coh.org>}
 
 \examples{ 
-library(PKtools)
 library(nlme) 
 data(Theoph) 
 Theoph<-Theoph[Theoph$Time!=0,]

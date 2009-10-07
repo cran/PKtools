@@ -1,15 +1,15 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{diagtrplot}
 \alias{diagtrplot}
-\alias{diagtrplot.NONMEM}
 \alias{diagtrplot.PKNLME}
+\alias{diagtrplot.NONMEM}
 \alias{diagtrplot.WinBUGS}
 \title{diagtrplot}
 \description{
 diagtrplot creates a trellis plot of the observed concentrations and predicted values vs time by subject.
 }
 \usage{
-diagtrplot(x, level, xvarlab, yvarlab, pages,...)
+diagtrplot(x,level,xvarlab,yvarlab,pages,...)
 }
 \arguments{
   \item{x}{variable identifying the clustering variable}
@@ -27,12 +27,8 @@ diagtrplot produces a trellis plot of observed concentrations and predicted valu
 
 \author{M.S. Blanchard<sblanchard@coh.org>}
 
-
-\seealso{\code{\link{trplot}}, \code{\link{diagplot}}, \code{\link{residplot}}, \code{\link{obvsprplot}}, \code{\link{tex}}, \code{\link{HTMLtools}}}
-
 \examples{
 library(nlme) 
-library(PKtools)
 data(Theoph) 
 Theoph<-Theoph[Theoph$Time!=0,]
 id<-as.numeric(as.character(Theoph$Subject)) 

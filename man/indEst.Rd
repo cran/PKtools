@@ -1,4 +1,4 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{indEst}
 \alias{indEst}
 \title{indEst}
@@ -15,7 +15,8 @@ indEst(PKNLMEobject, NMobject, WBobject, outputType)
   \item{WBobject}{WinBUGS object from RunWB}
   \item{outputType}{"tex" or "R" outputs are available}
 }
-\details{The PKNLME, NM and WB objects should all be from the same model
+
+\details{The PKNLME, NM and WB objects should all be from the same model.
 }
 
 \value{The output is a dataframe of the indiviudal parameter estimates.
@@ -29,7 +30,7 @@ Group:UCSF.
 Pinheiro, J.C. and Bates, D.M. (2000). "Mixed-Effects Models in S and SPLUS."
 Springer: New York.
 
-Spiegelhalter, D. and Thomas, A. and Best, N. and Lunn, D. (2001). "Winbugs
+Spiegelhalter, D. and Thomas, A. and Best, N. (2001). "Winbugs
 Version 1.4 User Manual.", Imperial College School of
 Medicine:London. 
 }
@@ -37,7 +38,6 @@ Medicine:London.
 \author{M.S. Blanchard <sblanchard@coh.org>}
 \seealso{RunNM, RunNLME, RunWB}
 \examples{
-
 if (.Platform$OS.type =="windows"){
 library(PKtools)
 library(nlme)
@@ -110,7 +110,6 @@ if (file.exists("C:/bugsR")) {
                "D[3,1]","D[3,2]","D[3,3]")
                )
 
-
   data<-list(data=data, cov=wt.v, id=id)
 
   WBargs<-list(parameters=parameters, inits=inits, n.chains=3,
@@ -173,6 +172,5 @@ if (file.exists("C:/nmv/run")) {
 if (out==0) print(try(indEst(PKNLMEobject=results.nlme5, NMobject=results5, WBobject=WB2, outputType="R"))) 
 }
 }
-
 
 \keyword{ models }% 

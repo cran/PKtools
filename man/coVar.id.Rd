@@ -1,4 +1,4 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{coVar.id}
 \alias{coVar.id}
 \title{coVar.id}
@@ -17,10 +17,9 @@ coVar.id(id, coVar, nameData)
 
 \value{coVar.id outputs a data set of the covariates one line per id with id as the first column.}
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
+\author{M.S. Blanchard <sblanchard.coh.org>}
 \seealso{RunNM, RunNLME, RunWB}
 \examples{
-library(PKtools)
 library(nlme) 
 data(Theoph) 
 Theoph<-Theoph[Theoph$Time!=0,]

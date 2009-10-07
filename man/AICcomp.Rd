@@ -1,11 +1,11 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{AICcomp}
 \alias{AICcomp}
 \title{AICcomp}
 \description{
 AICcomp  calculates and or prints the AIC, AICc (small
 sample AIC) and the loglikelihood from NONMEM and NLME for each
-of any number of models
+of any number of models.
 }
 \usage{
 AICcomp(PKNLMEobjects, NONMEMobjects)
@@ -28,9 +28,8 @@ K, number of population parameters including both means and variance parameters.
 Selection and Multimodel Inference: A Practical Information -
 Theoretic Approach (2nd edition). Springer: New York.}
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
-\note{ }
-\seealso{AIC}
+\author{M.S. Blanchard <sblanchard.coh.org>}\seealso{AIC}
+
 \examples{
 if (.Platform$OS.type =="windows"){
   library(PKtools)
@@ -64,7 +63,6 @@ if (file.exists("C:/nmv/run"))  {
   control=nlmeControl(returnObject=FALSE))
   results.nlme3<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
-
   #model 6
   nameData<-list(covnames=c("wt"), 
                yvarlab="Sqrt(Theop. Conc.) (mg/L)", 
@@ -78,11 +76,9 @@ if (file.exists("C:/nmv/run"))  {
   control=nlmeControl(returnObject=FALSE))
   results.nlme6<-RunNLME(inputStructure=model.def, data=data, nameData=nameData)
 
-
  
   #NONMEM code models 3 and 6 
   #note control files must be placed in the C:/nmv/run directory
-
 
   #model 3
   nameData<-list(covnames=c("wt"), 
@@ -95,7 +91,6 @@ if (file.exists("C:/nmv/run"))  {
                )
 
   results3<-RunNM(inputStructure="control.model3", data=data, nameData=nameData)
-
 
   #model 6
   nameData<-list(covnames=c("wt"), 
@@ -119,6 +114,5 @@ if (file.exists("C:/nmv/run"))  {
     "You do not have NONMEM."
   }
 }
-}
-
+}
 \keyword{ models }% 

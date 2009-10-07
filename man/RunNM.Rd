@@ -34,7 +34,7 @@ Boeckmann, A.J.  and Sheiner, L.B. and Beal, S.L. (1994). "NONMEM
 Users Guide- Part V, Introductory Guide". NONMEM Project
 Group:UCSF. }
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
+\author{M.S. Blanchard<suzette@sdac.harvard.edu}
 
 
 \seealso{\code{\link{pk}}, \code{\link{coVar.id}}, \code{\link{RunNLME}},\code{\link{RunWB}}}
@@ -76,5 +76,5 @@ else{
     "You do not have NONMEM."
   }
   } 
-  } 
+}
 \keyword{ models }%

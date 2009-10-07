@@ -1,14 +1,10 @@
-# copyright (c) 2005 M S Blanchard 
+# copyright (c) 2009 M S Blanchard 
 # with exception of excerpts noted below
 
 .PKtoolsOptions <- list(NONMEMloc = "C:/nmv/run", bugsRloc = "C:/bugsR")
 
 .packageName <- "PKtools"
 
-require(xtable)
-require(R2HTML)
-require(lattice)
-require(nlme)
 
 sonecpmt <- function (dose, time, lVol, lKa, lCl) {
     sqrt(dose * exp(lKa) * (exp(-(exp(lCl)/exp(lVol)) * time) -
@@ -31,36 +27,38 @@ PKtools.AIC <- function (loglike, n, K,...)
 }
 
 
-AICcomp<-function(PKNLMEobjects, NONMEMobjects){
- n1 <- length(PKNLMEobjects)
- n2 <- length(NONMEMobjects)
- if (n1 != n2) stop("model lists of unequal length")
-AIC.table <- matrix(NA,nr=n1,nc=7)
-for (i in 1:n1){
-n<-nrow(PKNLMEobjects[[i]]$mm$fitted)
-loglike<-logLik(PKNLMEobjects[[i]]$mm)[1]
-K<-attr(logLik(PKNLMEobjects[[i]]$mm),"df")
-
-#PKNLME
-AIC.NLME<-data.frame(PKtools.AIC(loglike=loglike,n=n,K=K), row.names="")
-#print(PKtools.AIC)s
-
-#NONMEM
-loglike.nm<- -.5*NONMEMobjects[[i]]$of
-K.nm<-sum(NONMEMobjects[[i]]$param[,1]!=0)
-AIC.NM<-data.frame(PKtools.AIC(loglike=loglike.nm,n=n,K=K.nm))
-#print(AIC.NM)
-
-#AIC Table
-AIC.table[i,]<-c(AIC.NM[,1],AIC.NLME[,1],AIC.NM[,2],AIC.NLME[,2],AIC.NM[,3],AIC.NLME[,3],AIC.NM[,4])
+AICcomp<-function (PKNLMEobjects, NONMEMobjects) 
+{
+    n1 <- length(PKNLMEobjects)
+    n2 <- length(NONMEMobjects)
+    if (n1 != n2) 
+        stop("model lists of unequal length")
+    AIC.table <- matrix(NA, nr = n1, nc = 7)
+    for (i in 1:n1) {
+        n <- nrow(PKNLMEobjects[[i]]$mm$fitted)
+        loglike <- logLik(PKNLMEobjects[[i]]$mm)[1]
+        K <- attr(logLik(PKNLMEobjects[[i]]$mm), "df")
+        AIC.NLME <- data.frame(PKtools.AIC(loglike = loglike, 
+            n = n, K = K), row.names = "")
+        loglike.nm <- -0.5 * NONMEMobjects[[i]]$of
+        K.nm <- sum(NONMEMobjects[[i]]$param[, 1] != 0)
+        AIC.NM <- data.frame(PKtools.AIC(loglike = loglike.nm, 
+            n = n, K = K.nm))
+        AIC.table[i, ] <- c(AIC.NM[, 1], AIC.NLME[, 1], AIC.NM[, 
+            2], AIC.NLME[, 2], AIC.NM[, 3], AIC.NLME[, 3], AIC.NM[, 
+            4])
+    }
+    AIC.table <- data.frame(AIC.table)
+    names(AIC.table) <- c("NM AIC", "NLME AIC", "NM AICc", "NLME AICc", 
+        "NM of", "NLME of", "K")
+    return(AIC.table)
 }
-AIC.table<-data.frame(AIC.table)
-names(AIC.table)<-c("NM AIC", "NLME AIC","NM AICc", "NLME AICc", "NM of","NLME of", "K")
-return(AIC.table)
-}
 
-desc <-
-function (y, pcts = c(0.025, 0.05, 0.95, 0.975), nsig = 4) {
+
+
+
+
+desc <-function (y, pcts = c(0.025, 0.05, 0.95, 0.975), nsig = 4) {
     x <- y[!is.na(y)]
     rn <- range(x)
     bin <- ifelse(is.na(y), 1, 0)
@@ -106,73 +104,76 @@ coVar.id<-function (id, coVar, nameData)
     return(cov.id=cov.id)
 }
 
-indEst<-function (PKNLMEobject, NMobject, WBobject, outputType="R") {
-library(xtable)
+indEst<-function (PKNLMEobject, NMobject, WBobject, outputType = "R") 
+{
+    library(xtable)
     num <- ncol(WBobject$mean$beta)
     for (i in 1:num) {
-        param.table <- data.frame(cbind(log(NMobject$ip[, i +
-            1]), coef(PKNLMEobject$mm)[, i], WBobject$mean$beta[,
+        param.table <- data.frame(cbind(log(NMobject$ip[, i + 
+            1]), coef(PKNLMEobject$mm)[, i], WBobject$mean$beta[, 
             i]))
         names(param.table) <- c("NONMEM", "NLME", "WinBUGS")
-if (outputType=="tex"){
-        print(paste("Individual Estimates -", WBobject$nameData$reparam[i], sep = " "))
-        print(xtable(param.table))
+        if (outputType == "tex") {
+            print(paste("Individual Estimates -", WBobject$nameData$reparam[i], 
+                sep = " "))
+            print(xtable(param.table))
         }
-   else { 
-        print(paste("Individual Estimates -", WBobject$nameData$reparam[i], sep = " "))
-        print(param.table)
+        else {
+            print(paste("Individual Estimates -", WBobject$nameData$reparam[i], 
+                sep = " "))
+            print(param.table)
         }
-}
+    }
 }
 
-pk <- function (pkvar = pkvar, covdata = cov, covnames = covnames)
+pk<-function (pkvar = pkvar, covdata = cov, covnames = covnames) 
 {
-    splitu<-function(x,y){
-       sx<-split(x,y)
-       usx<-lapply(sx,unique)
-       unusx<-unlist(usx)
-       }
-
-    if (is.null(covdata)){ 
-    dat<-pkvar
-    pkdata<-pkvar
+    splitu <- function(x, y) {
+        sx <- split(x, y)
+        usx <- lapply(sx, unique)
+        unusx <- unlist(usx)
     }
-    else{
-    newcov <- data.frame(covdata)
-    names(newcov) <- covnames
-    pkdata <- cbind(pkvar, newcov)
-    dat <- pkdata
+    if (is.null(covdata)) {
+        dat <- pkvar
+        pkdata <- pkvar
     }
-
-    if (is.null(covdata)){
-    unusid <- splitu(pkvar$id, pkvar$id)
-    unusdose <- splitu(pkvar$dose, pkvar$id)
-    luid <- length(unique(pkvar$id))
-    concd <- rep(NA, luid)
-    timed <- rep(0, luid)
-    names <- cbind(t(names(pkvar)))
-    dosedt <- data.frame(unusid, unusdose, timed, concd)
-    names(dosedt) <- names
-    } 
-    else{
-    unusid <- splitu(pkvar$id, pkvar$id)
-    unusdose <- splitu(pkvar$dose, pkvar$id)
-    luid <- length(unique(pkvar$id))
-    concd <- rep(NA, luid)
-    timed <- rep(0, luid)
-    if (is.data.frame(covdata)=="FALSE") cov.id<-splitu(covdata,pkvar$id)
-    if (is.data.frame(covdata)=="TRUE") {
-    ncov<-ncol(covdata)
-    nid<-length(unique(pkvar$id))
-    cov.id <- matrix(NA, nr =nid , nc = ncov)
-    for (j in 1:ncov){
-       cov.id[,j]<-splitu(covdata[,j],pkvar$id)
-       }
-    cov.id<-data.frame(cov.id)
+    else {
+        newcov <- data.frame(covdata)
+        names(newcov) <- covnames
+        pkdata <- cbind(pkvar, newcov)
+        dat <- pkdata
     }
-    names <- cbind(t(names(pkvar)), t(covnames))
-    dosedt <- data.frame(unusid, unusdose, timed, concd, cov.id)
-    names(dosedt) <- names
+    if (is.null(covdata)) {
+        unusid <- splitu(pkvar$id, pkvar$id)
+        unusdose <- splitu(pkvar$dose, pkvar$id)
+        luid <- length(unique(pkvar$id))
+        concd <- rep(NA, luid)
+        timed <- rep(0, luid)
+        names <- cbind(t(names(pkvar)))
+        dosedt <- data.frame(unusid, unusdose, timed, concd)
+        names(dosedt) <- names
+    }
+    else {
+        unusid <- splitu(pkvar$id, pkvar$id)
+        unusdose <- splitu(pkvar$dose, pkvar$id)
+        luid <- length(unique(pkvar$id))
+        concd <- rep(NA, luid)
+        timed <- rep(0, luid)
+        if (is.data.frame(covdata) == "FALSE") 
+            cov.id <- splitu(covdata, pkvar$id)
+        if (is.data.frame(covdata) == "TRUE") {
+            ncov <- ncol(covdata)
+            nid <- length(unique(pkvar$id))
+            cov.id <- matrix(NA, nr = nid, nc = ncov)
+            for (j in 1:ncov) {
+                cov.id[, j] <- splitu(covdata[, j], pkvar$id)
+            }
+            cov.id <- data.frame(cov.id)
+        }
+        names <- cbind(t(names(pkvar)), t(covnames))
+        dosedt <- data.frame(unusid, unusdose, timed, concd, 
+            cov.id)
+        names(dosedt) <- names
     }
     pkdata$dose <- NA
     newpkdata <- rbind(dosedt, pkdata)
@@ -183,116 +184,111 @@ pk <- function (pkvar = pkvar, covdata = cov, covnames = covnames)
     NMdata$dose <- ifelse(is.na(NMdata$dose), ".", NMdata$dose)
     NMdata$conc <- ifelse(is.na(NMdata$conc), ".", NMdata$conc)
     NMdata[12:22, ]
-
     write(t(NMdata), file = "NMdata", ncolumns = ncol(NMdata))
     return(list(dat = dat))
 }
 
 
-
-pk.nlme <- function (pkvar = pkvar, covdata = cov, covnames = covnames)
+pk.nlme<-function (pkvar = pkvar, covdata = cov, covnames = covnames) 
 {
-    if (is.null(covdata)) pkdata <-pkvar
-    else{
-    newcov <- data.frame(covdata)
-    names(newcov) <- covnames
-    pkdata <- cbind(pkvar, newcov)
-    }	
+    if (is.null(covdata)) 
+        pkdata <- pkvar
+    else {
+        newcov <- data.frame(covdata)
+        names(newcov) <- covnames
+        pkdata <- cbind(pkvar, newcov)
+    }
 }
-
-
-paramEst <- function(PKNLMEobject, NMobject, WBobject){
-
-#NONMEM
-NMparam<-data.frame(NMobject$param)  
-names(NMparam)<-c("NMparams","NMse")
-
-#NLME
-r<-summary(PKNLMEobject$mm)
-fp.nlme<-r$tTable[,1]
-var.nlme<-getPsi(r)
-n<-ncol(var.nlme)
-Gv<-NA
- for (j in n:1){
- for (i in j:1){
-   G<-var.nlme[i, j]
-   Gv<-cbind(Gv,G)  
-}
-}     
-Gv<-Gv[-c(1)]
-m<-n*(n+1)/2
-rseq<-c(seq(1:m))
-o<-order(rseq,decreasing=TRUE)
-sigma2<-r$sigma^2
-NLmean<-as.vector(rbind(cbind(fp.nlme),cbind(Gv[o]),sigma2))
-fpst.nlme<-cbind(r$tTable[,2])
-col2<-cbind(rep(NA,m+1))
-NLse<-as.vector(rbind(fpst.nlme,col2))
-NLparam<-data.frame(cbind(NLmean,NLse))
-names(NLparam)<-c("NLparams", "NLse")
-
-#WinBUGS
-    mu.table <- t(apply(WBobject$sims.list$mu[,], 2, desc))
-    mu.table <- data.frame(mu.table[,,drop=FALSE])
+
+paramEst<-function (PKNLMEobject, NMobject, WBobject) 
+{
+    NMparam <- data.frame(NMobject$param)
+    names(NMparam) <- c("NMparams", "NMse")
+    r <- summary(PKNLMEobject$mm)
+    fp.nlme <- r$tTable[, 1]
+    var.nlme <- getPsi(r)
+    n <- ncol(var.nlme)
+    Gv <- NA
+    for (j in n:1) {
+        for (i in j:1) {
+            G <- var.nlme[i, j]
+            Gv <- cbind(Gv, G)
+        }
+    }
+    Gv <- Gv[-c(1)]
+    m <- n * (n + 1)/2
+    rseq <- c(seq(1:m))
+    o <- order(rseq, decreasing = TRUE)
+    sigma2 <- r$sigma^2
+    NLmean <- as.vector(rbind(cbind(fp.nlme), cbind(Gv[o]), sigma2))
+    fpst.nlme <- cbind(r$tTable[, 2])
+    col2 <- cbind(rep(NA, m + 1))
+    NLse <- as.vector(rbind(fpst.nlme, col2))
+    NLparam <- data.frame(cbind(NLmean, NLse))
+    names(NLparam) <- c("NLparams", "NLse")
+    mu.table <- t(apply(WBobject$sims.list$mu[, ], 2, desc))
+    mu.table <- data.frame(mu.table[, , drop = FALSE])
     names(mu.table) <- gsub("X", " ", names(mu.table))
-
-n<-ncol(WBobject$mean$itau)
-itau.meanv<-NA
-itau.sev<-NA
- for (j in n:1){
- for (i in j:1){
-   itau.mean<-desc(WBobject$sims.list$itau[,i, j])[2]
-   itau.meanv<-rbind(itau.meanv,itau.mean)
-   itau.se<-desc(WBobject$sims.list$itau[,i, j])[4]
-   itau.sev<-rbind(itau.sev,itau.se)
+    n <- ncol(WBobject$mean$itau)
+    itau.meanv <- NA
+    itau.sev <- NA
+    for (j in n:1) {
+        for (i in j:1) {
+            itau.mean <- desc(WBobject$sims.list$itau[, i, j])[2]
+            itau.meanv <- rbind(itau.meanv, itau.mean)
+            itau.se <- desc(WBobject$sims.list$itau[, i, j])[4]
+            itau.sev <- rbind(itau.sev, itau.se)
+        }
+    }
+    itau.meanv <- cbind(itau.meanv[-c(1)])
+    itau.sev <- cbind(itau.sev[-c(1)])
+    m <- n * (n + 1)/2
+    rseq <- c(seq(1:m))
+    o <- order(rseq, decreasing = TRUE)
+    itau.df <- data.frame(cbind(rseq, itau.meanv[o], itau.sev[o]), 
+        row.names = NULL)
+    sigma.table <- as.matrix(t(desc(WBobject$sims.list$sigma)))
+    sigma.table <- data.frame(sigma.table[, , drop = FALSE])
+    WBmean <- rbind(cbind(mu.table[, 2]), cbind(itau.df[, 2]), 
+        sigma.table[, 2])
+    WBse <- rbind(cbind(mu.table[, 4]), cbind(itau.df[, 3]), 
+        sigma.table[, 4])
+    WBparam <- data.frame(cbind(WBmean, WBse))
+    names(WBparam) <- c("WBparams", "WBse")
+    params <- data.frame(cbind(NMparam, NLparam, WBparam))
+    row.names(params) <- rbind(cbind(NMobject$nameData$tparams), 
+        cbind(NMobject$nameData$varnames), "sigma^2")
+    return(params)
 }
-}
-itau.meanv<-cbind(itau.meanv[-c(1)])
-itau.sev<-cbind(itau.sev[-c(1)])
 
-m<-n*(n+1)/2
-rseq<-c(seq(1:m))
-o<-order(rseq,decreasing=TRUE)
-itau.df<-data.frame(cbind(rseq,itau.meanv[o], itau.sev[o]),row.names=NULL)
-
-sigma.table<-as.matrix(t(desc(WBobject$sims.list$sigma)))
-sigma.table<-data.frame(sigma.table[,,drop=FALSE])
-
-WBmean<-rbind(cbind(mu.table[,2]),cbind(itau.df[,2]),sigma.table[,2])
-WBse<-rbind(cbind(mu.table[,4]),cbind(itau.df[,3]),sigma.table[,4])
-WBparam<-data.frame(cbind(WBmean,WBse))
-names(WBparam)<-c("WBparams","WBse")
-
-params<-data.frame(cbind(NMparam,NLparam,WBparam))
-row.names(params)<-rbind(cbind(NMobject$nameData$tparams),cbind(NMobject$nameData$varnames),"sigma^2")
-return(params)
-}
-
-
-
-RunNLME<-function(inputStructure=inputStructure, data=data, 
-nameData=nameData){
+RunNLME<-function (inputStructure = inputStructure, data = data, nameData = nameData) 
+{
     pkdata <- pk.nlme(pkvar = data$pkvar, covdata = data$cov, 
         covnames = nameData$covnames)
     form <- inputStructure$form
-    mm<-nlme(form, data = pkdata, fixed = inputStructure$fixed.model, 
-    control = inputStructure$control, random = inputStructure$random.model, 
-    groups = ~id, start = inputStructure$start.lst)
-    if (is.null(data$cov))    MM <- list(mm=mm, pkdata=pkdata, nameData = nameData)
-    else{
-    cov.id <- coVar.id(data$pkvar$id, data$cov, nameData)
-    MM <- list(mm=mm, cov.id = cov.id, pkdata=pkdata, nameData = nameData)
+    mm <- nlme(form, data = pkdata, fixed = inputStructure$fixed.model, 
+        control = inputStructure$control, random = inputStructure$random.model, 
+        groups = ~id, start = inputStructure$start.lst)
+    if (is.null(data$cov)) 
+        MM <- list(mm = mm, pkdata = pkdata, nameData = nameData)
+    else {
+        cov.id <- coVar.id(data$pkvar$id, data$cov, nameData)
+        MM <- list(mm = mm, cov.id = cov.id, pkdata = pkdata, 
+            nameData = nameData)
     }
     class(MM) <- "PKNLME"
     MM
 }
 
 
-RunNM<-function (inputStructure = inputStructure, data=data, nameData = nameData) {
+
+
+RunNM<-function (inputStructure = inputStructure, data = data, nameData = nameData) 
+{
     options(width = 100)
     pkdat <- pk(pkvar = data$pkvar, cov = data$cov, covnames = nameData$covnames)
     unlink("MVOF.TBL")
-    system(paste("nmfe5", inputStructure, "report.nonmem"),show.output.on.console=FALSE)
+    system(paste("nmfe5", inputStructure, "report.nonmem"), show.output.on.console = FALSE)
     of <- as.data.frame(read.table("MVOF.TBL"))[1, 1]
     param <- as.data.frame(read.table("PAR.TAB", header = TRUE, 
         row.names = "Parameter"))
@@ -300,45 +296,57 @@ RunNM<-function (inputStructure = inputStructure, data=data, nameData = nameData
         skip = 1))
     ip <- as.data.frame(read.table("NMIP.TBL", header = TRUE, 
         skip = 1))
-    if (!is.null(data$cov)) cov <- as.data.frame(read.table("NMCOV.TBL", header = TRUE, 
-        skip = 1))
+    if (!is.null(data$cov)) 
+        cov <- as.data.frame(read.table("NMCOV.TBL", header = TRUE, 
+            skip = 1))
     NMpred <- as.data.frame(read.table("NMPR.TBL", header = TRUE, 
         skip = 1))
     pred <- NMpred[NMpred$EVID == 0, ]
-    if (is.null(data$cov)) NM <- list(of = of, param = param, ip = ip, re = re, pred = pred, 
-        pkdat = pkdat, nameData = nameData)
-    else NM <- list(of = of, param = param, ip = ip, re = re, pred = pred, 
-        cov = cov, pkdat = pkdat, nameData = nameData)
+    if (is.null(data$cov)) 
+        NM <- list(of = of, param = param, ip = ip, re = re, 
+            pred = pred, pkdat = pkdat, nameData = nameData)
+    else NM <- list(of = of, param = param, ip = ip, re = re, 
+        pred = pred, cov = cov, pkdat = pkdat, nameData = nameData)
     class(NM) <- "NONMEM"
     NM
 }
 
-RunWB<-function (inputStructure = inputStructure, data = data, nameData = nameData, WBargs = WBargs) 
+RunWB<-function (inputStructure = inputStructure, data = data, nameData = nameData, 
+    WBargs = WBargs) 
 {
-    out<-bugs(data = data$data, inits = WBargs$inits, parameters.to.save = WBargs$parameters, 
+    out <- bugs(data = data$data, inits = WBargs$inits, parameters.to.save = WBargs$parameters, 
         model.file = inputStructure, n.chains = WBargs$n.chains, 
         n.iter = WBargs$n.iter, debug = WBargs$debug, n.burnin = WBargs$n.burnin, 
         n.thin = WBargs$n.thin, print.summary = FALSE, plot.summary = TRUE)
-    if ("conc" %in% WBargs$parameters) data$data$conc[is.na(data$data$conc)]<-mean$conc
+    if ("conc" %in% WBargs$parameters) 
+        data$data$conc[is.na(data$data$conc)] <- out$mean$conc
     id.v <- data$id
-    mean$iresid <- data$data$conc - mean$ipred
-    mean$presid <- data$data$conc - mean$ppred
-    n<-length(data$data$conc)
-    ipred.v <- t(structure(.Data = c(t(mean$ipred)), .Dim = c(1, n)))
-    ppred.v <- t(structure(.Data = c(t(mean$ppred)), .Dim = c(1, n)))
-    conc.v <- t(structure(.Data = c(t(data$data$conc)), .Dim = c(1, n)))
-    time.v <- t(structure(.Data = c(t(data$data$time)), .Dim = c(1, n)))
-    pred <- data.frame(cbind(id.v, time.v, conc.v, ppred.v, ipred.v,mean$presid, mean$iresid))
-    names(pred) <- c("id", "time", "conc", "ppred", "ipred","presid","iresid")
-    if (is.null(data$cov))  WB <- list(mean = mean, sims.list = out$sims.list, data=data, nameData = nameData, pred=pred)
-    else{ 
-    cov.id<-coVar.id(data$id, data$cov, nameData)
-    WB <- list(mean = mean, sims.list = out$sims.list, data=data, nameData = nameData, pred=pred, cov.id=cov.id)
-    } 
+    out$mean$iresid = data$data$conc - out$mean$ipredwb
+    out$mean$presid = data$data$conc - out$mean$ppredwb
+    n <- length(data$data$conc)
+    ipred.v <- t(structure(.Data = c(t(out$mean$ipredwb)), .Dim = c(1, 
+        n)))
+    ppred.v <- t(structure(.Data = c(t(out$mean$ppredwb)), .Dim = c(1, 
+        n)))
+    conc.v <- t(structure(.Data = c(t(data$data$conc)), .Dim = c(1, 
+        n)))
+    time.v <- t(structure(.Data = c(t(data$data$time)), .Dim = c(1, 
+        n)))
+    pred <- data.frame(cbind(id.v, time.v, conc.v, ppred.v, ipred.v, 
+        out$mean$presid, out$mean$iresid))
+    names(pred) <- c("id", "time", "conc", "ppred", "ipred", 
+        "presid", "iresid")
+    if (is.null(data$cov)) 
+        WB <- list(mean = out$mean, sims.list = out$sims.list, data = data, 
+            nameData = nameData, pred = pred)
+    else {
+        cov.id <- coVar.id(data$id, data$cov, nameData)
+        WB <- list(mean = out$mean, sims.list = out$sims.list, data = data, 
+            nameData = nameData, pred = pred, cov.id = cov.id)
+    }
     class(WB) <- "WinBUGS"
     WB
 }
-
 
 
 print.PKNLME<-function (x,...){
@@ -378,11 +386,7 @@ print.WinBUGS <-function (x,...)
     print(sigma2)
     invisible(NULL)
 }
-
-
-
-
-
+
 diagplot.PKNLME<- function (x,...) {
     CONC<-x$pkdata$conc
     PRED<-x$mm$fitted[,1]
@@ -402,6 +406,7 @@ diagplot.PKNLME<- function (x,...) {
     plot(dat$IPRE, dat$IRES, xlab = "Predicted values", ylab = "Residuals")
     abline(h = 0)
 }
+
 diagplot.NONMEM <- function (x,...) {
     dat<-x$pred
     par(mfrow = c(3, 2), mar = c(5, 4, 4, 2))
@@ -421,10 +426,9 @@ diagplot.NONMEM <- function (x,...) {
     abline(h = 0)
 }
 
-
-diagplot.WinBUGS<-function (x,...) 
+diagplot.WinBUGS<-function (x, ...) 
 {
-dat<-x$pred
+    dat <- x$pred
     par(mfrow = c(2, 2), mar = c(5, 4, 4, 2))
     plot(dat$ppred, dat$conc, xlab = "Predicted values", ylab = "Observed values", 
         main = "Population Model")
@@ -437,18 +441,14 @@ dat<-x$pred
     plot(dat$ipred, dat$iresid, xlab = "Predicted values", ylab = "Residuals")
     abline(h = 0)
 }
-
-
-
+
 diagplot<-function(x, ...)
 UseMethod("diagplot")
 
 diagplot.default <- function(x, ...)
 stop(paste("diagplot method does not yet exist for instances of class",
 class(x)))
-
-
-
+
 residplot.PKNLME <- function (x,level,...) {
     CONC<-x$pkdata$conc
     PRED<-x$mm$fitted[,1]
@@ -502,10 +502,10 @@ diagdata<-x$pred
 
 
 
-residplot<-function(x, ...)
+residplot<-function(x, level, ...)
 UseMethod("residplot")
 
-residplot.default <- function(x, ...)
+residplot.default <- function(x, level,...)
 stop(paste("residplot method does not yet exist for instances of class",
 class(x)))
 
@@ -558,10 +558,10 @@ diagdata<-x$pred
 
 
 
-obvsprplot<-function(x, ...)
+obvsprplot<-function(x, level, ...)
 UseMethod("obvsprplot")
 
-obvsprplot.default <- function(x, ...)
+obvsprplot.default <- function(x, level, ...)
 stop(paste("obsvpplot method does not yet exist for instances of class",
 class(x)))
 
@@ -574,9 +574,9 @@ trplot.PKNLME<- function (x,xvarlab,yvarlab,pages,...){
     library(lattice)
     ID <- as.factor(dat$id)
     xyplot(CONC ~ TIME | ID, data = dat, xlab = xvarlab, xlim = c(-1,
-        max(TIME)), ylab = yvarlab, ylim = c(min(CONC), max(CONC)), 
+        max(TIME)), ylab = yvarlab, ylim = c(min(dat$CONC), max(dat$CONC)), 
         span = 2, layout = c(4, 4, pages), aspect = 1,
-        panel = function(x,y, span) {
+        panel = function(x,y,...) {
             panel.xyplot(x, y, col = "black", cex = 1.2, type="b")})
 }
 
@@ -586,8 +586,8 @@ trplot.NONMEM<- function (x,xvarlab,yvarlab,pages,...){
 dat<-x$pred
     library(lattice)
     Id <- as.factor(dat$ID)
-    xyplot(CONC ~ TIME | Id, data = dat, xlab = xvarlab, xlim = c(-1,
-        max(time)), ylab = yvarlab, ylim = c(min(dat$CONC), max(dat$CONC)),
+    xyplot(conc ~ time | Id, data = dat, xlab = xvarlab, xlim = c(-1,
+        max(time)), ylab = yvarlab, ylim = c(min(dat$conc), max(dat$conc)),
         span = 2, layout = c(4, 4, pages), aspect = 1,panel = function(x,
             y, span) {
             panel.xyplot(x, y, col = "black", cex = 1.2, type="b")
@@ -609,10 +609,10 @@ dat<-x$pred
 
 
 
-trplot<-function (x,xvarlab,yvarlab,pages,...)
+trplot<-function(x,xvarlab,yvarlab,pages,...)
 UseMethod("trplot")
 
-trplot.default <- function (x,xvarlab,yvarlab,pages,...)
+trplot.default <- function(x,xvarlab,yvarlab,pages,...)
 stop(paste("trplot method does not yet exist for instances of class",
 class(x)))
 
@@ -634,12 +634,12 @@ function (x, level , xvarlab = xvarlab, yvarlab = yvarlab, pages = pages,...)
     if (level =="p") preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
     else preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
     plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+    names(plotdata) <- c("id", "time", "dv.pred", "type")
     newid <- factor(plotdata$id)
     sps <- trellis.par.get("superpose.symbol")
     sps$pch <- 1:7
     trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
+    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = plotdata$type, 
         xlab = xvarlab, ylab = yvarlab, span = 2, layout = c(4, 
             4, pages), aspect = 1, type = "b", panel = "panel.superpose", 
         panel.group = "panel.xyplot", key = list(columns = 2, 
@@ -659,12 +659,12 @@ function (x, level , xvarlab = xvarlab, yvarlab = yvarlab, pages = pages,...)
     if (level =="p") preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
     else preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
     plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+    names(plotdata) <- c("id", "time", "dv.pred", "type")
     newid <- factor(plotdata$id)
     sps <- trellis.par.get("superpose.symbol")
     sps$pch <- 1:7
     trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
+    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = plotdata$type, 
         xlab = xvarlab, ylab = yvarlab, span = 2, layout = c(4, 
             4, pages), aspect = 1, type = "b", panel = "panel.superpose", 
         panel.group = "panel.xyplot", key = list(columns = 2, 
@@ -683,12 +683,12 @@ trdata<-x$pred
     if (level =="p") preddata <- cbind(trdata$id, trdata$time, trdata$ppred, typepred)
     else preddata <- cbind(trdata$id, trdata$time, trdata$ipred, typepred)
     plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+    names(plotdata) <- c("id", "time", "dv.pred", "type")
     newid <- factor(plotdata$id)
     sps <- trellis.par.get("superpose.symbol")
     sps$pch <- 1:7
     trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
+    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = plotdata$type, 
         xlab = xvarlab, ylab = yvarlab, span = 2, layout = c(4, 
             4, pages), aspect = 1, type = "b", panel = "panel.superpose", 
         panel.group = "panel.xyplot", key = list(columns = 2, 
@@ -698,68 +698,56 @@ trdata<-x$pred
       
             
             
-diagtrplot <- function (x, level , xvarlab = xvarlab, yvarlab = yvarlab, pages = pages,...) 
+diagtrplot<-function(x, level, xvarlab, yvarlab, pages,...)
 UseMethod("diagtrplot")
 
+diagtrplot.default <- function(x, level, xvarlab, yvarlab, pages,...)
+stop(paste("diagtrplot method does not yet exist for instances of class",
+class(x)))
 
-tex.PKNLME <-function (x=x, nameDir=nameDir, 
-    nameFile = nameFile, descStructure = descStructure,...) 
-{ 
-
-
-cat ("Results written to", nameDir, "\n")
-
-if (!is.null(x$cov.id)){
-#Covariates
-    cov.desc <- t(apply(x$cov.id[, ], 2, desc, pcts = descStructure$pcts,
-        nsig = descStructure$nsig))
-    cov.desc <- data.frame(cov.desc[-c(1),, drop=FALSE])
-    names(cov.desc) <- gsub("X", " ", names(cov.desc))
-#    row.names(cov.desc) <- x$nameData$covnames
-#    cov.desc <- as.matrix(cov.desc)
-#    cov.desc <- formatC(cov.desc, format = "fg", digits = 3)
-}
-
-#NLME parameters
+tex.PKNLME<-function (x = x, nameDir = nameDir, nameFile = nameFile, descStructure = descStructure, ...) 
+{
+    cat("Results written to", nameDir, "\n")
+    if (!is.null(x$cov.id)) {
+        cov.desc <- t(apply(x$cov.id[, ], 2, desc, pcts = descStructure$pcts, 
+            nsig = descStructure$nsig))
+        cov.desc <- data.frame(cov.desc[-c(1), , drop = FALSE])
+        names(cov.desc) <- gsub("X", " ", names(cov.desc))
+    }
     r <- summary(x$mm)
     r.tTable <- as.matrix(r$tTable)
     r.tTable <- formatC(r.tTable, format = "fg", digits = 3)
     sigma.nlme <- data.frame(r$sigma^2)
     names(sigma.nlme) <- c("sigma2")
     sigma.nlme <- as.matrix(sigma.nlme)
-    sigma.nlme <- data.frame(formatC(sigma.nlme, format = "fg", digits = 3), row.names="")
+    sigma.nlme <- data.frame(formatC(sigma.nlme, format = "fg", 
+        digits = 3), row.names = "")
     var.nlme <- getPsi(r)
     var.nlme <- as.matrix(var.nlme)
     var.nlme <- formatC(var.nlme, format = "fg", digits = 3)
     n <- nrow(data$pkvar)
-
-#AIC table
-    AIC.table <- data.frame(PKtools.AIC(loglike = logLik(x$mm), n = n, 
-        K = attr(logLik(x$mm), "df")),row.names="")
+    AIC.table <- data.frame(PKtools.AIC(loglike = logLik(x$mm), 
+        n = n, K = attr(logLik(x$mm), "df")), row.names = "")
     colnames(AIC.table) <- c("AIC", "AICc", "OF", "K")
-
-#individual PK parameters
-    coef.table <- t(apply(coef(x$mm)[, ], 2, desc, pcts = descStructure$pcts,
+    coef.table <- t(apply(coef(x$mm)[, ], 2, desc, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
-    coef.table <- data.frame(coef.table[,,drop=FALSE])
+    coef.table <- data.frame(coef.table[, , drop = FALSE])
     names(coef.table) <- gsub("X", " ", names(coef.table))
     coef.table <- as.matrix(coef.table)
     coef.table <- formatC(coef.table, format = "fg", digits = 3)
-
     pages = round(length(unique(data$pkvar$id))/16)
-
     postscript(file = nameFile$file1, paper = "letter")
     library(lattice)
-    print(trplot(x, xvarlab=x$nameData$xvarlab, yvarlab=x$nameData$yvarlab, pages=pages))
+    print(trplot(x, xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages))
     dev.off()
     postscript(file = "trplt.ps", paper = "letter")
-
-    print(trplot(x, xvarlab=x$nameData$xvarlab, yvarlab=x$nameData$yvarlab, pages=1))
+    print(trplot(x, xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1))
     dev.off()
     postscript(file = nameFile$file2, paper = "letter")
     diagplot(x)
     dev.off()
-    
     postscript(file = nameFile$file3, paper = "letter")
     par(mfrow = c(2, 1), mar = c(4, 5, 3, 5))
     qqnorm(x$mm$residuals[, 1], main = "Residuals from population model")
@@ -767,8 +755,6 @@ if (!is.null(x$cov.id)){
     qqnorm(x$mm$residuals[, 2], main = "Residuals from individual model")
     qqline(x$mm$residuals[, 2])
     dev.off()
-
-
     postscript(file = nameFile$file4, paper = "letter")
     re <- x$mm$coef$random$id
     nre <- ncol(re)
@@ -779,49 +765,52 @@ if (!is.null(x$cov.id)){
         qqline(re[, i])
     }
     dev.off()
-
-if (!is.null(x$cov.id)){
-    postscript(file = nameFile$file5, paper = "letter")
-    par(mfrow = c(1, 1), mar = c(4, 5, 3, 5))
-    ncov <- ncol(x$cov.id)
-    for (j in 2:ncov) {
-        for (i in 1:nre) {
-            plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j - 
-                1], ylab = paste("Random effects for log(", x$nameData$reparams[i], 
+    if (!is.null(x$cov.id)) {
+        postscript(file = nameFile$file5, paper = "letter")
+        par(mfrow = c(1, 1), mar = c(4, 5, 3, 5))
+        ncov <- ncol(x$cov.id)
+        for (j in 2:ncov) {
+            for (i in 1:nre) {
+                plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j - 
+                  1], ylab = paste("Random effects for log(", 
+                  x$nameData$reparams[i], ")", sep = ""))
+                abline(h = 0)
+            }
+        }
+        dev.off()
+        postscript(file = "re1.ps", paper = "letter")
+        par(mar = c(4, 5, 3, 5), bg = "grey")
+        if (ncov - 1 <= 16) 
+            par(mfrow = c(ceiling((ncov - 1)/4), 4))
+        if (ncov - 1 <= 12) 
+            par(mfrow = c(ceiling((ncov - 1)/3), 3))
+        if (ncov - 1 <= 8) 
+            par(mfrow = c(ceiling((ncov - 1)/2), 2))
+        if (ncov - 1 <= 4) 
+            par(mfrow = c(ncov - 1, 1))
+        for (j in 2:ncov) {
+            plot(x$cov.id[, j], re[, 1], xlab = x$nameData$covnames[j - 
+                1], ylab = paste("Random effects for log(", x$nameData$reparams[1], 
                 ")", sep = ""))
             abline(h = 0)
         }
+        dev.off()
     }
-    dev.off()
-    postscript(file = "re1.ps", paper = "letter")
-    par(mar=c(4, 5, 3, 5), bg="grey")
-    if (ncov - 1 <= 16) 
-        par(mfrow = c(ceiling((ncov - 1)/4), 4))
-    if (ncov - 1 <= 12) 
-        par(mfrow = c(ceiling((ncov - 1)/3), 3))
-    if (ncov - 1 <= 8) 
-        par(mfrow = c(ceiling((ncov - 1)/2), 2))
-    if (ncov - 1 <= 4) 
-        par(mfrow = c(ncov - 1, 1))
-    for (j in 2:ncov) {
-        plot(x$cov.id[, j], re[, 1], xlab = x$nameData$covnames[j - 
-            1], ylab = paste("Random effects for log(", x$nameData$reparams[1], 
-            ")", sep = ""))
-        abline(h = 0)
-    }
-    dev.off()
-}
     postscript(file = nameFile$file6, paper = "letter")
-    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = pages) 
+    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages)
     dev.off()
     postscript(file = "diagtrplti.ps", paper = "letter")
-    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = 1) 
+    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1)
     dev.off()
     postscript(file = nameFile$file7, paper = "letter")
-    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = pages) 
+    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages)
     dev.off()
     postscript(file = "diagtrpltp.ps", paper = "letter")
-    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = 1) 
+    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1)
     dev.off()
     library(xtable)
     format.NLME <- function(file = "mynlme.tex", file1 = "trplt.nl.ps", 
@@ -850,7 +839,9 @@ if (!is.null(x$cov.id)){
         print(xtable(coef.table, "Descriptive statistics for individual Parameters"), 
             file = file, append = TRUE)
         cat("\\clearpage\n", file = file, append = TRUE)
- if (!is.null(x$cov.id)) print(xtable(cov.desc, "Covariates"), file = file, append = TRUE)
+        if (!is.null(x$cov.id)) 
+            print(xtable(cov.desc, "Covariates"), file = file, 
+                append = TRUE)
         cat("\\clearpage\n", file = file, append = TRUE)
         cat("\\begin{figure}\n", file = file, append = TRUE)
         cat(paste("\\includegraphics[height=6in,angle=270]{", 
@@ -876,14 +867,14 @@ if (!is.null(x$cov.id)){
         cat("\\caption{QQPlots: Stage II Model}\n", file = file, 
             append = TRUE)
         cat("\\end{figure}\n", file = file, append = TRUE)
-if (!is.null(x$cov.id)){
-        cat("\\begin{figure}\n", file = file, append = TRUE)
-        cat(paste("\\includegraphics[height=6in,angle=270]{", 
-            file5, "}\n", sep = ""), file = file, append = TRUE)
-        cat("\\caption{Individual Random effects vs Covariates}\n", 
-            file = file, append = TRUE)
-        cat("\\end{figure}\n", file = file, append = TRUE)
-}
+        if (!is.null(x$cov.id)) {
+            cat("\\begin{figure}\n", file = file, append = TRUE)
+            cat(paste("\\includegraphics[height=6in,angle=270]{", 
+                file5, "}\n", sep = ""), file = file, append = TRUE)
+            cat("\\caption{Individual Random effects vs Covariates}\n", 
+                file = file, append = TRUE)
+            cat("\\end{figure}\n", file = file, append = TRUE)
+        }
         cat("\\begin{figure}\n", file = file, append = TRUE)
         cat(paste("\\includegraphics[height=6in,angle=270]{", 
             file6, "}\n", sep = ""), file = file, append = TRUE)
@@ -902,53 +893,36 @@ if (!is.null(x$cov.id)){
     format.NLME(file = nameFile$file, file1 = "trplt.ps", file2 = nameFile$file2, 
         file3 = nameFile$file3, file4 = nameFile$file4, file5 = "re1.ps", 
         file6 = "diagtrplti.ps", file7 = "diagtrpltp.ps")
-#   return(list(MM = MM))
 }
 
 
-
-tex.NONMEM<-function (x=x, nameDir=nameDir,
-    nameFile = nameFile, descStructure = descStructure,...) 
+tex.NONMEM<-function (x = x, nameDir = nameDir, nameFile = nameFile, descStructure = descStructure, ...) 
 {
-
-
-cat ("Results written to", nameDir, "\n")
-
-    
-#AIC
+    cat("Results written to", nameDir, "\n")
     n <- nrow(x$pkdat$dat)
     pages <- round(length(unique(x$pkdat$dat$id))/16)
     K <- sum(x$param[, 1] != 0)
     loglike <- -0.5 * x$of
     AIC.table <- data.frame(PKtools.AIC(loglike = loglike, n = n, 
-        K = K), row.names="")
-
-#covariates
-if (!is.null(x$cov)){
-    cov.desc <- t(apply(x$cov[, ], 2, desc, pcts = descStructure$pcts,
+        K = K), row.names = "")
+    if (!is.null(x$cov)) {
+        cov.desc <- t(apply(x$cov[, ], 2, desc, pcts = descStructure$pcts, 
+            nsig = descStructure$nsig))
+        cov.desc <- data.frame(cov.desc[-c(1), , drop = FALSE])
+        names(cov.desc) <- gsub("X", " ", names(cov.desc))
+    }
+    ip.desc <- t(apply(x$ip[, ], 2, desc, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
-    cov.desc <- data.frame(cov.desc[-c(1),,drop=FALSE])
-    names(cov.desc) <- gsub("X", " ", names(cov.desc))
-#    row.names(cov.desc) <- x$nameData$covnames
-#    cov.desc <- as.matrix(cov.desc)
-#    cov.desc <- formatC(cov.desc, format = "fg", digits = 3)
-}
-
-#individual parameters
-    ip.desc <- t(apply(x$ip[, ], 2, desc, pcts = descStructure$pcts,
-        nsig = descStructure$nsig))
-    ip.desc <- data.frame(ip.desc[-c(1),,drop=FALSE])
+    ip.desc <- data.frame(ip.desc[-c(1), , drop = FALSE])
     names(ip.desc) <- gsub("X", " ", names(ip.desc))
-#    row.names(ip.desc) <- x$nameData$reparams
-#    ipdesc <- as.matrix(ip.desc)
-#    ipdesc <- formatC(ipdesc, format = "fg", digits = 3)
-
     postscript(file = nameFile$file1, paper = "letter")
     library(lattice)
-    print(trplot(x, xvarlab=x$nameData$xvarlab, yvarlab=x$nameData$yvarlab, pages=pages))
+    print(trplot(x, xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages))
     dev.off()
     postscript(file = "trplt.ps", paper = "letter")
-    print(trplot(x, xvarlab=x$nameData$xvarlab, yvarlab=x$nameData$yvarlab, pages=1))
+    print(trplot(x, xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1))
     dev.off()
     postscript(file = nameFile$file2, paper = "letter")
     diagplot(x)
@@ -960,7 +934,6 @@ if (!is.null(x$cov)){
     qqnorm(x$pred$IWRE, main = "Weighted residuals from the individual model")
     qqline(x$pred$IWRE)
     dev.off()
-
     postscript(file = nameFile$file4, paper = "letter")
     re <- x$re
     nre <- ncol(re)
@@ -971,54 +944,54 @@ if (!is.null(x$cov)){
         qqline(re[, i])
     }
     dev.off()
-
-if (!is.null(x$cov)){
-    postscript(file = nameFile$file5, paper = "letter")
-    ncov <- ncol(x$cov)
-    re <- x$re
-    nre <- ncol(re)
-    par(mfrow = c(1, 1), mar = c(4, 5, 3, 5))
-    for (j in 2:ncov) {
-        for (i in 2:nre) {
-            plot(x$cov[, j], re[, i], xlab = x$nameData$covnames[j - 
-                1], ylab = paste("Random effects for log(", x$nameData$reparams[i - 
-                1], ")", sep = ""))
+    if (!is.null(x$cov)) {
+        postscript(file = nameFile$file5, paper = "letter")
+        ncov <- ncol(x$cov)
+        re <- x$re
+        nre <- ncol(re)
+        par(mfrow = c(1, 1), mar = c(4, 5, 3, 5))
+        for (j in 2:ncov) {
+            for (i in 2:nre) {
+                plot(x$cov[, j], re[, i], xlab = x$nameData$covnames[j - 
+                  1], ylab = paste("Random effects for log(", 
+                  x$nameData$reparams[i - 1], ")", sep = ""))
+                abline(h = 0)
+            }
+        }
+        dev.off()
+        postscript(file = "re1.ps", paper = "letter")
+        par(mar = c(4, 5, 3, 5), bg = "grey")
+        if (ncov - 1 <= 16) 
+            par(mfrow = c(ceiling((ncov - 1)/4), 4))
+        if (ncov - 1 <= 12) 
+            par(mfrow = c(ceiling((ncov - 1)/3), 3))
+        if (ncov - 1 <= 8) 
+            par(mfrow = c(ceiling((ncov - 1)/2), 2))
+        if (ncov - 1 <= 4) 
+            par(mfrow = c(ncov - 1, 1))
+        for (j in 2:ncov) {
+            plot(x$cov[, j], re[, 2], xlab = x$nameData$covnames[j - 
+                1], ylab = paste("Random effects for log(", x$nameData$reparams[1], 
+                ")", sep = ""))
             abline(h = 0)
         }
+        dev.off()
     }
-    dev.off()
-
-    postscript(file = "re1.ps", paper = "letter")
-    par(mar=c(4, 5, 3, 5), bg="grey")
-    if (ncov - 1 <= 16) 
-        par(mfrow = c(ceiling((ncov - 1)/4), 4))
-    if (ncov - 1 <= 12) 
-        par(mfrow = c(ceiling((ncov - 1)/3), 3))
-    if (ncov - 1 <= 8) 
-        par(mfrow = c(ceiling((ncov - 1)/2), 2))
-    if (ncov - 1 <= 4) 
-        par(mfrow = c(ncov - 1, 1))
-    for (j in 2:ncov) {
-        plot(x$cov[, j], re[, 2], xlab = x$nameData$covnames[j - 
-            1], ylab = paste("Random effects for log(", x$nameData$reparams[1], 
-            ")", sep = ""))
-        abline(h = 0)
-    }
-    dev.off()
-}
     postscript(file = nameFile$file6, paper = "letter")
-    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = pages) 
+    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages)
     dev.off()
-    
     postscript(file = "diagtrplti.ps", paper = "letter")
-    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = 1) 
+    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1)
     dev.off()
-    
     postscript(file = nameFile$file7, paper = "letter")
-    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = pages) 
+    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages)
     dev.off()
     postscript(file = "diagtrpltp.ps", paper = "letter")
-    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = 1) 
+    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1)
     dev.off()
     NM.param <- data.frame(x$param)
     names(NM.param) <- c("Estimate", "Standard Error")
@@ -1026,12 +999,11 @@ if (!is.null(x$cov)){
         "sigma2")
     NMparam <- as.matrix(NM.param)
     NMparam <- formatC(NMparam, format = "fg", digits = 3)
-
     library(xtable)
     format.NONMEM <- function(file = "mynm.tex", file1 = nameFile$file1, 
         file2 = nameFile$file2, file3 = nameFile$file3, file4 = nameFile$file4, 
         file5 = nameFile$file5, file6 = nameFile$file6, file7 = nameFile$file7) {
-       cat("\\documentclass{article}\n", file = file)
+        cat("\\documentclass{article}\n", file = file)
         cat("\\usepackage{epsfig}\n", file = file, append = TRUE)
         cat("\\textwidth=6in\n", file = file, append = TRUE)
         cat("\\textheight=8.5in\n", file = file, append = TRUE)
@@ -1049,7 +1021,9 @@ if (!is.null(x$cov)){
         cat("\\clearpage\n", file = file, append = TRUE)
         print(xtable(ip.desc, "Individual Parameters"), file = file, 
             append = TRUE)
-        if (!is.null(x$cov))  print(xtable(cov.desc, "Covariates"), file = file, append = TRUE)
+        if (!is.null(x$cov)) 
+            print(xtable(cov.desc, "Covariates"), file = file, 
+                append = TRUE)
         cat("\\clearpage\n", file = file, append = TRUE)
         cat("\\begin{figure}\n", file = file, append = TRUE)
         cat(paste("\\includegraphics[height=6in,angle=270]{", 
@@ -1075,14 +1049,14 @@ if (!is.null(x$cov)){
         cat("\\caption{QQPlots: Stage II Model}\n", file = file, 
             append = TRUE)
         cat("\\end{figure}\n", file = file, append = TRUE)
-if (!is.null(x$cov)){ 
-       cat("\\begin{figure}\n", file = file, append = TRUE)
-        cat(paste("\\includegraphics[height=6in,angle=270]{", 
-            file5, "}\n", sep = ""), file = file, append = TRUE)
-        cat("\\caption{Individual Random effects vs Covariates}\n", 
-            file = file, append = TRUE)
-        cat("\\end{figure}\n", file = file, append = TRUE)
-}
+        if (!is.null(x$cov)) {
+            cat("\\begin{figure}\n", file = file, append = TRUE)
+            cat(paste("\\includegraphics[height=6in,angle=270]{", 
+                file5, "}\n", sep = ""), file = file, append = TRUE)
+            cat("\\caption{Individual Random effects vs Covariates}\n", 
+                file = file, append = TRUE)
+            cat("\\end{figure}\n", file = file, append = TRUE)
+        }
         cat("\\begin{figure}\n", file = file, append = TRUE)
         cat(paste("\\includegraphics[height=6in,angle=270]{", 
             file6, "}\n", sep = ""), file = file, append = TRUE)
@@ -1101,28 +1075,22 @@ if (!is.null(x$cov)){
     format.NONMEM(file = nameFile$file, file1 = "trplt.ps", file2 = nameFile$file2, 
         file3 = nameFile$file3, file4 = nameFile$file4, file5 = "re1.ps", 
         file6 = "diagtrplti.ps", file7 = "diagtrpltp.ps")
-#         return(list(NM = NM))
-
 }
 
 
-tex.WinBUGS<-function (x=x, nameDir=nameDir, nameFile = nameFile, descStructure = descStructure,...) 
+
+tex.WinBUGS<-function (x = x, nameDir = nameDir, nameFile = nameFile, descStructure = descStructure, 
+    ...) 
 {
-
-
-cat ("Results written to", nameDir, "\n")
-
-#Covariates
-if (!is.null(x$cov)){
-    ncov <- ncol(x$cov)
-    cov.desc <- t(apply(x$cov[, ], 2, desc, pcts = descStructure$pcts,
-        nsig = descStructure$nsig))
-    cov.desc <- data.frame(cov.desc[-c(1),,drop=FALSE])
-    names(cov.desc) <- gsub("X", " ", names(cov.desc))
-    row.names(cov.desc) <- x$nameData$covnames
-#    covdesc <- as.matrix(cov.desc)
-#    covdesc <- formatC(covdesc, format = "fg", digits = 3)
-}
+    cat("Results written to", nameDir, "\n")
+    if (!is.null(x$cov)) {
+        ncov <- ncol(x$cov)
+        cov.desc <- t(apply(x$cov[, ], 2, desc, pcts = descStructure$pcts, 
+            nsig = descStructure$nsig))
+        cov.desc <- data.frame(cov.desc[-c(1), , drop = FALSE])
+        names(cov.desc) <- gsub("X", " ", names(cov.desc))
+        row.names(cov.desc) <- x$nameData$covnames
+    }
     postscript(file = "qqploti.ps", paper = "letter")
     par(mfrow = c(2, 1), mar = c(4, 5, 3, 5))
     qqnorm(x$pred$presid, main = "Residuals from population model")
@@ -1141,13 +1109,15 @@ if (!is.null(x$cov)){
     pages <- round(length(unique(x$pred$id))/16)
     postscript(file = nameFile$file1, paper = "letter")
     library(lattice)
-    print(trplot(x,xvarlab=x$nameData$xvarlab, yvarlab=x$nameData$yvarlab, pages=pages))
+    print(trplot(x, xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages))
     dev.off()
     postscript(file = "trplt.ps", paper = "letter")
-    print(trplot(x,xvarlab=x$nameData$xvarlab, yvarlab=x$nameData$yvarlab, pages=1))
+    print(trplot(x, xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1))
     dev.off()
     postscript(file = nameFile$file2, paper = "letter")
-    diagplot(x=x)
+    diagplot(x = x)
     dev.off()
     postscript(file = nameFile$file3, paper = "letter")
     par(mfrow = c(2, 1), mar = c(4, 5, 3, 5))
@@ -1161,55 +1131,59 @@ if (!is.null(x$cov)){
     nre <- ncol(re)
     par(mfrow = c(nre, 1), mar = c(4, 5, 3, 5))
     for (i in 1:nre) {
-        qqnorm(re[, i], main = paste("log(", 
-            x$nameData$reparams[i], ")", sep = ""))
+        qqnorm(re[, i], main = paste("log(", x$nameData$reparams[i], 
+            ")", sep = ""))
         qqline(re[, i])
     }
     dev.off()
-if (!is.null(x$cov)){
-    postscript(file = nameFile$file5, paper = "letter")
-    re <- x$mean$re
-    ncov <- ncol(x$cov.id)
-    nre <- ncol(re)
-    par(mfrow = c(1, 1), mar = c(4, 5, 3, 5))
-    for (i in 1:nre) {
+    if (!is.null(x$cov)) {
+        postscript(file = nameFile$file5, paper = "letter")
+        re <- x$mean$re
+        ncov <- ncol(x$cov.id)
+        nre <- ncol(re)
+        par(mfrow = c(1, 1), mar = c(4, 5, 3, 5))
+        for (i in 1:nre) {
+            for (j in 2:ncov) {
+                plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j - 
+                  1], ylab = paste("Random effects for log(", 
+                  x$nameData$reparams[i], ")", sep = ""))
+                abline(h = 0)
+            }
+        }
+        dev.off()
+        postscript(file = "re1.ps", paper = "letter")
+        par(mar = c(4, 5, 3, 5), bg = "grey")
+        if (ncov <= 16) 
+            par(mfrow = c(ceiling(ncov/4), 4))
+        if (ncov <= 12) 
+            par(mfrow = c(ceiling(ncov/3), 3))
+        if (ncov <= 8) 
+            par(mfrow = c(ceiling(ncov/2), 2))
+        if (ncov <= 4) 
+            par(mfrow = c(ncov, 1))
         for (j in 2:ncov) {
-            plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j - 
-                1], ylab = paste("Random effects for log(", x$nameData$reparams[i], 
+            plot(x$cov.id[, j], re[, 1], xlab = x$nameData$covnames[j - 
+                1], ylab = paste("Random effects for log(", x$nameData$reparams[1], 
                 ")", sep = ""))
             abline(h = 0)
         }
+        dev.off()
     }
-    dev.off()
-    postscript(file = "re1.ps", paper = "letter")
-    par(mar=c(4, 5, 3, 5), bg="grey")
-    if (ncov <= 16) 
-        par(mfrow = c(ceiling(ncov/4), 4))
-    if (ncov <= 12) 
-        par(mfrow = c(ceiling(ncov/3), 3))
-    if (ncov <= 8) 
-        par(mfrow = c(ceiling(ncov/2), 2))
-    if (ncov <= 4) 
-        par(mfrow = c(ncov, 1))
-    for (j in 2:ncov) {
-        plot(x$cov.id[, j], re[, 1], xlab = x$nameData$covnames[j - 
-            1], ylab = paste("Random effects for log(", x$nameData$reparams[1], 
-            ")", sep = ""))
-        abline(h = 0)
-    }
-    dev.off()
-}
     postscript(file = nameFile$file6, paper = "letter")
-    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = pages) 
+    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages)
     dev.off()
     postscript(file = "diagtrplti.ps", paper = "letter")
-    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = 1) 
+    diagtrplot(x, "i", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1)
     dev.off()
     postscript(file = nameFile$file7, paper = "letter")
-    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = pages) 
+    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = pages)
     dev.off()
     postscript(file = "diagtrpltp.ps", paper = "letter")
-    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, pages = 1) 
+    diagtrplot(x, "p", xvarlab = x$nameData$xvarlab, yvarlab = x$nameData$yvarlab, 
+        pages = 1)
     dev.off()
     cnt <- 6 + length(descStructure$pcts)
     lp <- length(x$nameData$params)
@@ -1231,15 +1205,13 @@ if (!is.null(x$cov)){
     names(var.table) <- gsub("X", " ", names(var.table))
     var.table <- as.matrix(var.table)
     var.table <- formatC(var.table, format = "fg", digits = 3)
-
-    sigma.table <- t(desc(x$sims.list$sigma2, pcts = descStructure$pcts,
+    sigma.table <- t(desc(x$sims.list$sigma2, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
-    sigma.table <- data.frame(sigma.table[,, drop=FALSE])
+    sigma.table <- data.frame(sigma.table[, , drop = FALSE])
     names(sigma.table) <- gsub("X", " ", names(sigma.table))
     row.names(sigma.table) <- c("Sigma2")
     sigma.table <- as.matrix(cbind(sigma.table))
     sigma.table <- formatC(sigma.table, format = "fg", digits = 3)
-
     mu.table <- t(apply(x$sims.list$mu[, ], 2, desc, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
     mu.table <- data.frame(mu.table)
@@ -1293,8 +1265,9 @@ if (!is.null(x$cov)){
                 ")", sep = "")), file = file, append = TRUE)
         }
         cat("\\clearpage\n", file = file, append = TRUE)
-        if (!is.null(x$cov.id)) print(xtable(cov.desc, "Covariates"), file = file, 
-            append = TRUE)
+        if (!is.null(x$cov.id)) 
+            print(xtable(cov.desc, "Covariates"), file = file, 
+                append = TRUE)
         cat("\\clearpage\n", file = file, append = TRUE)
         cat("\\begin{figure}\n", file = file, append = TRUE)
         cat(paste("\\includegraphics[height=6in,angle=270]{", 
@@ -1320,14 +1293,14 @@ if (!is.null(x$cov)){
         cat("\\caption{QQPlots: Stage II Model}\n", file = file, 
             append = TRUE)
         cat("\\end{figure}\n", file = file, append = TRUE)
-if (!is.null(x$cov)){
-        cat("\\begin{figure}\n", file = file, append = TRUE)
-        cat(paste("\\includegraphics[height=6in,angle=270]{", 
-            file5, "}\n", sep = ""), file = file, append = TRUE)
-        cat("\\caption{Individual Random effects vs Covariates}\n", 
-            file = file, append = TRUE)
-        cat("\\end{figure}\n", file = file, append = TRUE)
-}
+        if (!is.null(x$cov)) {
+            cat("\\begin{figure}\n", file = file, append = TRUE)
+            cat(paste("\\includegraphics[height=6in,angle=270]{", 
+                file5, "}\n", sep = ""), file = file, append = TRUE)
+            cat("\\caption{Individual Random effects vs Covariates}\n", 
+                file = file, append = TRUE)
+            cat("\\end{figure}\n", file = file, append = TRUE)
+        }
         cat("\\begin{figure}\n", file = file, append = TRUE)
         cat(paste("\\includegraphics[height=6in,angle=270]{", 
             file6, "}\n", sep = ""), file = file, append = TRUE)
@@ -1346,211 +1319,215 @@ if (!is.null(x$cov)){
     format.WB(file = nameFile$file, file0 = nameFile$file0, file1 = "trplt.ps", 
         file2 = nameFile$file2, file3 = nameFile$file3, file4 = nameFile$file4, 
         file5 = "re1.ps", file6 = "diagtrplti.ps", file7 = "diagtrpltp.ps")
-#    return(list(WB = WB))
 }
- 
 
 
-tex <- function (x=x, nameDir=nameDir, nameFile = nameFile, descStructure = descStructure,...) 
+tex<-function(x, nameDir, nameFile, descStructure, ...) 
 UseMethod("tex")
 
-tex.default <- function (x=x, nameDir=nameDir, nameFile = nameFile, descStructure = descStructure,...) 
+tex.default <- function(x, nameDir, nameFile, descStructure, ...) 
 stop(paste("tex method does not yet exist for instances of class",
-class(x)))    
+class(x)))
 
-HTMLtools.PKNLME <-function (x=x, nameDir=nameDir, nameFile = nameFile, descStructure=list(pcts=c(0.025,0.05,0.95,0.975),nsig=4),...) 
-{ 
-library(R2HTML)
-
-cat ("Results written to", nameDir, "\n")
-
-#Covariates
-if (!is.null(x$cov.id)){
-    cov.desc <- t(apply(x$cov.id[, ], 2, desc, pcts = descStructure$pcts,
-        nsig = descStructure$nsig))
-    cov.desc <- data.frame(cov.desc[-c(1),,drop=FALSE])
-    names(cov.desc) <- gsub("X", " ", names(cov.desc))
-    row.names(cov.desc) <- x$nameData$covnames
-#    covdesc <- as.matrix(cov.desc)
-#    covdesc <- formatC(covdesc, format = "fg", digits = 3)
-}
-
-#NLME parameters
+HTMLtools.PKNLME<-function (x = x, nameDir=nameDir, nameFile = nameFile, descStructure = list(pcts = c(0.025, 
+    0.05, 0.95, 0.975), nsig = 4), ...) 
+{
+    library(R2HTML)
+    cat("Results written to", nameDir, "\n")
+    if (!is.null(x$cov.id)) {
+        cov.desc <- t(apply(x$cov.id[, ], 2, desc, pcts = descStructure$pcts, 
+            nsig = descStructure$nsig))
+        cov.desc <- data.frame(cov.desc[-c(1), , drop = FALSE])
+        names(cov.desc) <- gsub("X", " ", names(cov.desc))
+        row.names(cov.desc) <- x$nameData$covnames
+    }
     r <- summary(x$mm)
     r.tTable <- as.matrix(r$tTable)
     r.tTable <- formatC(r.tTable, format = "fg", digits = 3)
     sigma.nlme <- data.frame(r$sigma^2)
     names(sigma.nlme) <- c("sigma2")
     sigma.nlme <- as.matrix(sigma.nlme)
-    sigma.nlme <- data.frame(formatC(sigma.nlme, format = "fg", digits = 3), row.names="")
+    sigma.nlme <- data.frame(formatC(sigma.nlme, format = "fg", 
+        digits = 3), row.names = "")
     var.nlme <- getPsi(r)
     var.nlme <- as.matrix(var.nlme)
     var.nlme <- formatC(var.nlme, format = "fg", digits = 3)
     n <- nrow(data$pkvar)
-
-#AIC table
-    AIC.table <- data.frame(PKtools.AIC(loglike = logLik(x$mm), n = n, 
-        K = attr(logLik(x$mm), "df")), row.names="")
+    AIC.table <- data.frame(PKtools.AIC(loglike = logLik(x$mm), 
+        n = n, K = attr(logLik(x$mm), "df")), row.names = "")
     colnames(AIC.table) <- c("AIC", "AICc", "OF", "K")
-
-#individual PK parameters
     pages = round(length(unique(data$pkvar$id))/16)
-    coef.table<- t(apply(coef(x$mm)[, ], 2, desc, pcts = descStructure$pcts,
+    coef.table <- t(apply(coef(x$mm)[, ], 2, desc, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
-    coef.table <- data.frame(coef.table[,,drop=FALSE])
+    coef.table <- data.frame(coef.table[, , drop = FALSE])
     names(coef.table) <- gsub("X", " ", names(coef.table))
-
-plotFun<-function(x, f) f(x)
-
-plot.TrPre<- function(x) function(){
-    id <- x$pkdata$id
-    CONC <- x$pkdata$conc
-    TIME <- x$pkdata$time
-    dat <- data.frame(cbind(id, CONC, TIME))
-    library(lattice)
-    ID <- as.factor(dat$id)
-    print(xyplot(CONC ~ TIME | ID, data = dat, xlab = x$nameData$xvarlab, xlim = c(-1, 
-        max(TIME)), ylab = x$nameData$yvarlab, ylim = c(min(CONC), max(CONC)), 
-        span = 2, layout = c(4, 4, pages=1), aspect = 1, panel = function(x, 
-            y, span) {
-            panel.xyplot(x, y, col = "black", cex = 1.2, type = "b")
-        }))
-}
-plot.Tr = plot.TrPre(x)
-
-qplot.Pre<-function(x) function(){
-    par(mfrow = c(2, 1), mar = c(4, 5, 3, 5), bg="grey")
-    qqnorm(x$mm$residuals[, 1], main = "Residuals from population model")
-    qqline(x$mm$residuals[, 1])
-    qqnorm(x$mm$residuals[, 2], main = "Residuals from individual model")
-    qqline(x$mm$residuals[, 2])}
-qplot<-qplot.Pre(x)
-    
-qplot.rePre<-function(x) function(){
-    re <- x$mm$coef$random$id
-    nre <- ncol(re)
-    par(mfrow = c(nre, 1), mar = c(4, 5, 3, 5), bg="grey")
-    for (i in 1:nre) {
-        qqnorm(re[, i], main = paste("Random effects for log(", 
-            x$nameData$reparams[i], ")", sep = ""))
-        qqline(re[, i])
+    plotFun <- function(x, f) f(x)
+    plot.TrPre <- function(x) function() {
+        id <- x$pkdata$id
+        CONC <- x$pkdata$conc
+        TIME <- x$pkdata$time
+        dat <- data.frame(cbind(id, CONC, TIME))
+        library(lattice)
+        ID <- as.factor(dat$id)
+        print(xyplot(CONC ~ TIME | ID, data = dat, xlab = x$nameData$xvarlab, 
+            xlim = c(-1, max(TIME)), ylab = x$nameData$yvarlab, 
+            ylim = c(min(CONC), max(CONC)), span = 2, layout = c(4, 
+                4, pages = 1), aspect = 1, panel = function(x, 
+                y, span) {
+                panel.xyplot(x, y, col = "black", cex = 1.2, 
+                  type = "b")
+            }))
     }
-}
-qplot.re<-qplot.rePre(x)
-
-if (!is.null(x$cov.id)){      
-re.covPre<-function(x)function(){ 
-    re <- x$mm$coef$random$id
-    nre <- ncol(re)
-    ncov <- ncol(x$cov.id)
-    par(bg = "grey")
-    if (ncov-1<=16)
-       par(mfrow=c(ceiling((ncov-1)/4),4))
-    if (ncov-1<=12)
-       par(mfrow=c(ceiling((ncov-1)/3),4))
-    if (ncov-1<=8)
-       par(mfrow=c(ceiling((ncov-1)/2),4))
-    if (ncov-1<=4)
-       par(mfrow=c(ceiling((ncov-1)),1))
-    for (i in 1:nre){
-    for (j in 2:ncov) {
-            plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j - 
-                1], ylab = x$nameData$reparams[i])
-            abline(h = 0)
+    plot.Tr = plot.TrPre(x)
+    qplot.Pre <- function(x) function() {
+        par(mfrow = c(2, 1), mar = c(4, 5, 3, 5), bg = "grey")
+        qqnorm(x$mm$residuals[, 1], main = "Residuals from population model")
+        qqline(x$mm$residuals[, 1])
+        qqnorm(x$mm$residuals[, 2], main = "Residuals from individual model")
+        qqline(x$mm$residuals[, 2])
+    }
+    qplot <- qplot.Pre(x)
+    qplot.rePre <- function(x) function() {
+        re <- x$mm$coef$random$id
+        nre <- ncol(re)
+        par(mfrow = c(nre, 1), mar = c(4, 5, 3, 5), bg = "grey")
+        for (i in 1:nre) {
+            qqnorm(re[, i], main = paste("Random effects for log(", 
+                x$nameData$reparams[i], ")", sep = ""))
+            qqline(re[, i])
         }
-   }
-   } 
-re.cov<-re.covPre(x)   
-   }
-
-dplot.Pre<-function(x) function() diagplot(x)
-dplot<-dplot.Pre(x)
-
-diagtrploti.Pre<- function (x)  function()
-{
-    ID <- x$pkdata$id
-    CONC <- x$pkdata$conc
-    TIME <- x$pkdata$time
-    PRED <- x$mm$fitted[, 1]
-    IPRE <- x$mm$fitted[, 2]
-    RES <- x$mm$resid[, 1]
-    IRES <- x$mm$resid[, 2]
-    dat <- data.frame(cbind(ID, CONC, TIME, PRED, IPRE, RES, 
-        IRES))
-    library(lattice)
-    typedv <- rep(1, length(dat$ID))
-    typepred <- rep(2, length(dat$ID))
-    dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv)
-    #    preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
-    preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
-    plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
-    newid <- factor(plotdata$id)
-    sps <- trellis.par.get("superpose.symbol")
-    sps$pch <- 1:7
-    trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
-        xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, span = 2, layout = c(4, 
-            4, pages=1), aspect = 1, type = "b", panel = "panel.superpose", 
-        panel.group = "panel.xyplot", key = list(columns = 2, 
-            text = list(paste(c("Values:  Observed", " Predicted"))), 
-            points = Rows(sps, 1:2))))
+    }
+    qplot.re <- qplot.rePre(x)
+    if (!is.null(x$cov.id)) {
+        re.covPre <- function(x) function() {
+            re <- x$mm$coef$random$id
+            nre <- ncol(re)
+            ncov <- ncol(x$cov.id)
+            par(bg = "grey")
+            if (ncov - 1 <= 16) 
+                par(mfrow = c(ceiling((ncov - 1)/4), 4))
+            if (ncov - 1 <= 12) 
+                par(mfrow = c(ceiling((ncov - 1)/3), 4))
+            if (ncov - 1 <= 8) 
+                par(mfrow = c(ceiling((ncov - 1)/2), 4))
+            if (ncov - 1 <= 4) 
+                par(mfrow = c(ceiling((ncov - 1)), 1))
+            for (i in 1:nre) {
+                for (j in 2:ncov) {
+                  plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j - 
+                    1], ylab = x$nameData$reparams[i])
+                  abline(h = 0)
+                }
+            }
+        }
+        re.cov <- re.covPre(x)
+    }
+    dplot.Pre <- function(x) function() diagplot(x)
+    dplot <- dplot.Pre(x)
+    diagtrploti.Pre <- function(x) function() {
+        ID <- x$pkdata$id
+        CONC <- x$pkdata$conc
+        TIME <- x$pkdata$time
+        PRED <- x$mm$fitted[, 1]
+        IPRE <- x$mm$fitted[, 2]
+        RES <- x$mm$resid[, 1]
+        IRES <- x$mm$resid[, 2]
+        dat <- data.frame(cbind(ID, CONC, TIME, PRED, IPRE, RES, 
+            IRES))
+        library(lattice)
+        typedv <- rep(1, length(dat$ID))
+        typepred <- rep(2, length(dat$ID))
+        dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv)
+        preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
+        plotdata <- as.data.frame(rbind(dvdata, preddata))
+        names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+        newid <- factor(plotdata$id)
+        sps <- trellis.par.get("superpose.symbol")
+        sps$pch <- 1:7
+        trellis.par.set("superpose.symbol", sps)
+        print(xyplot(dv.pred ~ time | newid, data = plotdata, 
+            groups = typepred, xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, 
+            span = 2, layout = c(4, 4, pages = 1), aspect = 1, 
+            type = "b", panel = "panel.superpose", panel.group = "panel.xyplot", 
+            key = list(columns = 2, text = list(paste(c("Values:  Observed", 
+                " Predicted"))), points = Rows(sps, 1:2))))
+    }
+    diagtrploti <- diagtrploti.Pre(x)
+    diagtrplotp.Pre <- function(x) function() {
+        ID <- x$pkdata$id
+        CONC <- x$pkdata$conc
+        TIME <- x$pkdata$time
+        PRED <- x$mm$fitted[, 1]
+        IPRE <- x$mm$fitted[, 2]
+        RES <- x$mm$resid[, 1]
+        IRES <- x$mm$resid[, 2]
+        dat <- data.frame(cbind(ID, CONC, TIME, PRED, IPRE, RES, 
+            IRES))
+        library(lattice)
+        typedv <- rep(1, length(dat$ID))
+        typepred <- rep(2, length(dat$ID))
+        dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv)
+        preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
+        plotdata <- as.data.frame(rbind(dvdata, preddata))
+        names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+        newid <- factor(plotdata$id)
+        sps <- trellis.par.get("superpose.symbol")
+        sps$pch <- 1:7
+        trellis.par.set("superpose.symbol", sps)
+        print(xyplot(dv.pred ~ time | newid, data = plotdata, 
+            groups = typepred, xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, 
+            span = 2, layout = c(4, 4, pages = 1), aspect = 1, 
+            type = "b", panel = "panel.superpose", panel.group = "panel.xyplot", 
+            key = list(columns = 2, text = list(paste(c("Values:  Observed", 
+                " Predicted"))), points = Rows(sps, 1:2))))
+    }
+    diagtrplotp <- diagtrplotp.Pre(x)
+    HTMLInitFile(outdir = nameDir, file = nameFile$file, extension = "html", 
+        BackGroundColor = "#E9967A")
+    file.app <- paste(nameFile$file, ".html", sep = "")
+    HTML.title("Results from NLME", HR = 3, file = file.app)
+    HTML(r$tTable, caption = "Mean Population Parameter Estimates", 
+        file = file.app)
+    HTML(var.nlme, caption = "Intersubject Variance-Covariance Matrix", 
+        file = file.app)
+    HTML(sigma.nlme, caption = "Intrasubject Variance", file = file.app)
+    HTML(AIC.table, caption = "Model Selection Criteria", file = file.app)
+    HTML(coef.table, caption = "Descriptive statistics for Individual Parameters", 
+        file = file.app)
+    if (!is.null(x$cov.id)) 
+        HTML(cov.desc, caption = "Covariates", file = file.app)
+    HTMLplot(Caption = "Trellis Plots", plotFunction = plot.Tr, 
+        GraphFileName = "plot.Tr", GraphSaveAs = "png", append = TRUE, 
+        file = file.app)
+    HTMLplot(Caption = "Predicted vs Observed and Residual vs Predicted Plots", 
+        plotFunction = dplot, GraphFileName = "dplot", GraphSaveAs = "png", 
+        append = TRUE, file = file.app)
+    HTMLplot(Caption = "QQplots:Stage I Model, QQplots provide a visual assessment of normality", 
+        plotFunction = qplot, GraphFileName = "qplot", GraphSaveAs = "png", 
+        append = TRUE, file = file.app)
+    HTMLplot(Caption = "QQPlots: Stage II Model", plotFunction = qplot.re, 
+        GraphFileName = "qplot.re", GraphSaveAs = "png", append = TRUE, 
+        file = file.app)
+    if (!is.null(x$cov.id)) 
+        HTMLplot(Caption = "Individual Random effects vs Covariates", 
+            plotFunction = re.cov, GraphFileName = "re.cov", 
+            GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLplot(Caption = "Individual Predicted and Observed Values vs Time", 
+        plotFunction = diagtrploti, GraphFileName = "diagtrploti", 
+        GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLplot(Caption = "Population Predicted and Observed Values vs Time", 
+        plotFunction = diagtrplotp, GraphFileName = "diagtrplotp", 
+        GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLEndFile()
 }
-diagtrploti<-diagtrploti.Pre(x)
 
-diagtrplotp.Pre<- function (x)  function()
+
+
+
+
+HTMLtools.NONMEM<-function (x = x, nameDir=nameDir, nameFile = nameFile, descStructure = list(pcts = c(0.025, 
+    0.05, 0.95, 0.975), nsig = 4), ...) 
 {
-    ID <- x$pkdata$id
-    CONC <- x$pkdata$conc
-    TIME <- x$pkdata$time
-    PRED <- x$mm$fitted[, 1]
-    IPRE <- x$mm$fitted[, 2]
-    RES <- x$mm$resid[, 1]
-    IRES <- x$mm$resid[, 2]
-    dat <- data.frame(cbind(ID, CONC, TIME, PRED, IPRE, RES, 
-        IRES))
-    library(lattice)
-    typedv <- rep(1, length(dat$ID))
-    typepred <- rep(2, length(dat$ID))
-    dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv)
-    preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
-    #preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
-    plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
-    newid <- factor(plotdata$id)
-    sps <- trellis.par.get("superpose.symbol")
-    sps$pch <- 1:7
-    trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
-        xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, span = 2, layout = c(4, 
-            4, pages=1), aspect = 1, type = "b", panel = "panel.superpose", 
-        panel.group = "panel.xyplot", key = list(columns = 2, 
-            text = list(paste(c("Values:  Observed", " Predicted"))), 
-            points = Rows(sps, 1:2))))
-}
-diagtrplotp<-diagtrplotp.Pre(x)
-
-HTMLInitFile(outdir=nameDir, file=nameFile$file, extension="html", BackGroundColor="#E9967A")
- file.app<-paste(nameFile$file,".html",sep="")
-         HTML.title("Results from NLME", HR=3,file=file.app)
-         HTML(r$tTable, caption="Mean Population Parameter Estimates",file = file.app)
-         HTML(var.nlme,caption="Intersubject Variance-Covariance Matrix", file = file.app)
-         HTML(sigma.nlme, caption="Intrasubject Variance", file = file.app)
-         HTML(AIC.table, caption="Model Selection Criteria", file = file.app)
-         HTML(coef.table, caption="Descriptive statistics for Individual Parameters", file=file.app)
-             if (!is.null(x$cov.id)) HTML(cov.desc, caption="Covariates",file = file.app)
-         HTMLplot(Caption="Trellis Plots", plotFunction=plot.Tr, GraphFileName="plot.Tr", GraphSaveAs="png", append=TRUE, file=file.app)    
-         HTMLplot(Caption="Predicted vs Observed and Residual vs Predicted Plots", plotFunction=dplot, GraphFileName="dplot", GraphSaveAs="png", append=TRUE, file=file.app)
-         HTMLplot(Caption="QQplots:Stage I Model, QQplots provide a visual assessment of normality", plotFunction=qplot, GraphFileName="qplot", GraphSaveAs="png", append=TRUE, file=file.app)
-         HTMLplot(Caption="QQPlots: Stage II Model", plotFunction=qplot.re, GraphFileName="qplot.re", GraphSaveAs="png", append=TRUE, file=file.app)
- if (!is.null(x$cov.id)) HTMLplot(Caption="Individual Random effects vs Covariates", plotFunction=re.cov, GraphFileName="re.cov", GraphSaveAs="png", append=TRUE, file=file.app)        
-         HTMLplot(Caption ="Individual Predicted and Observed Values vs Time",plotFunction=diagtrploti,GraphFileName="diagtrploti", GraphSaveAs="png", append=TRUE, file=file.app)    
-         HTMLplot(Caption = "Population Predicted and Observed Values vs Time",plotFunction=diagtrplotp,GraphFileName="diagtrplotp", GraphSaveAs="png", append=TRUE, file=file.app)    
-HTMLEndFile()
-     }
-
-HTMLtools.NONMEM <-function (x = x, nameDir = nameDir, nameFile = nameFile, descStructure = list(pcts = c(0.025, 0.05, 0.95, 0.975),
-        nsig = 4),...){
     library(R2HTML)
     cat("Results written to", nameDir, "\n")
     n <- nrow(x$pkdat$dat)
@@ -1559,185 +1536,187 @@ HTMLtools.NONMEM <-function (x = x, nameDir = nameDir, nameFile = nameFile, desc
     loglike <- -0.5 * x$of
     NM.param <- data.frame(x$param)
     names(NM.param) <- c("Estimate", "Standard Error")
-    rownames(NM.param) <- rbind(cbind(x$nameData$tparams), cbind(x$nameData$varnames),
+    rownames(NM.param) <- rbind(cbind(x$nameData$tparams), cbind(x$nameData$varnames), 
         "sigma2")
     NMparam <- as.matrix(NM.param)
     NMparam <- formatC(NMparam, format = "fg", digits = 3)
-         
-    AIC.table <- data.frame(PKtools.AIC(loglike = loglike, n = n,
+    AIC.table <- data.frame(PKtools.AIC(loglike = loglike, n = n, 
         K = K), row.names = "")
     if (!is.null(x$cov)) {
-        cov.desc <- t(apply(x$cov[, ], 2, desc, pcts = descStructure$pcts,
+        cov.desc <- t(apply(x$cov[, ], 2, desc, pcts = descStructure$pcts, 
             nsig = descStructure$nsig))
         cov.desc <- data.frame(cov.desc[-c(1), , drop = FALSE])
         names(cov.desc) <- gsub("X", " ", names(cov.desc))
         row.names(cov.desc) <- x$nameData$covnames
     }
-    ip.desc <- t(apply(x$ip[, ], 2, desc, pcts = descStructure$pcts,
+    ip.desc <- t(apply(x$ip[, ], 2, desc, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
     ip.desc <- data.frame(ip.desc[-c(1), , drop = FALSE])
     names(ip.desc) <- gsub("X", " ", names(ip.desc))
-    
-    plotFun<-function(x, f) f(x)
-        
-    plot.TrPre<- function(x) function(){
-    dat <- x$pred
-    library(lattice)
-    Id <- as.factor(dat$ID)
-    print(xyplot(CONC ~ TIME | Id, data = dat, xlab =x$nameData$xvarlab, xlim = c(-1, 
-        max(time)), ylab = x$nameData$yvarlab, ylim = c(min(dat$CONC), max(dat$CONC)), 
-        span = 2, layout = c(4, 4, 1), aspect = 1, panel = function(x, 
-            y, span) {
-            panel.xyplot(x, y, col = "black", cex = 1.2, type = "b")
-        }))
+    plotFun <- function(x, f) f(x)
+    plot.TrPre <- function(x) function() {
+        dat <- x$pred
+        library(lattice)
+        Id <- as.factor(dat$ID)
+        print(xyplot(CONC ~ TIME | Id, data = dat, xlab = x$nameData$xvarlab, 
+            xlim = c(-1, max(time)), ylab = x$nameData$yvarlab, 
+            ylim = c(min(dat$CONC), max(dat$CONC)), span = 2, 
+            layout = c(4, 4, 1), aspect = 1, panel = function(x, 
+                y, span) {
+                panel.xyplot(x, y, col = "black", cex = 1.2, 
+                  type = "b")
+            }))
     }
     plot.Tr = plot.TrPre(x)
-    
-dplot.Pre<-function(x) function() diagplot(x)
-dplot<-dplot.Pre(x)
-
-   
-qplot.Pre<-function(x) function(){
-    par(mfrow = c(2, 1), mar = c(4, 5, 3, 5), bg="grey") 
-    qqnorm(x$pred$WRES, main = "Weighted residuals from the population model")
-    qqline(x$pred$WRES)
-    qqnorm(x$pred$IWRE, main = "Weighted residuals from the individual model")
-    qqline(x$pred$IWRE)
+    dplot.Pre <- function(x) function() diagplot(x)
+    dplot <- dplot.Pre(x)
+    qplot.Pre <- function(x) function() {
+        par(mfrow = c(2, 1), mar = c(4, 5, 3, 5), bg = "grey")
+        qqnorm(x$pred$WRES, main = "Weighted residuals from the population model")
+        qqline(x$pred$WRES)
+        qqnorm(x$pred$IWRE, main = "Weighted residuals from the individual model")
+        qqline(x$pred$IWRE)
     }
-qplot<-qplot.Pre(x)
-    
-    
-qplot.rePre<-function(x) function(){
-    re <- x$re
-    nre <- ncol(re)
-    par(mfrow = c(nre - 1, 1), mar = c(4, 2, 3, 2), bg = "grey")
-    for (i in 2:nre) {
-        qqnorm(re[, i], main = paste("Random effects for log(",
-            x$nameData$reparams[i - 1], ")", sep = ""))
-        qqline(re[, i])
-    }
-}    
-qplot.re<-qplot.rePre(x)    
-
-
-    if (!is.null(x$cov)) {
-re.covPre<-function(x)function(){             
-        par(bg = "grey")
-        ncov <- ncol(x$cov)
+    qplot <- qplot.Pre(x)
+    qplot.rePre <- function(x) function() {
         re <- x$re
         nre <- ncol(re)
-        if (ncov-1<=16)
-           par(mfrow=c(ceiling((ncov-1)/4),4))
-        if (ncov-1<=12)
-           par(mfrow=c(ceiling((ncov-1)/3),4))
-        if (ncov-1<=8)
-           par(mfrow=c(ceiling((ncov-1)/2),4))
-        if (ncov-1<=4)
-           par(mfrow=c(ceiling((ncov-1)),1))
+        par(mfrow = c(nre - 1, 1), mar = c(4, 2, 3, 2), bg = "grey")
         for (i in 2:nre) {
-           for (j in 2:ncov) {         
-                plot(x$cov[, j], re[, i], xlab = x$nameData$covnames[j -
-                  1], ylab = x$nameData$reparams[i - 1])
-                abline(h = 0)
+            qqnorm(re[, i], main = paste("Random effects for log(", 
+                x$nameData$reparams[i - 1], ")", sep = ""))
+            qqline(re[, i])
+        }
+    }
+    qplot.re <- qplot.rePre(x)
+    if (!is.null(x$cov)) {
+        re.covPre <- function(x) function() {
+            par(bg = "grey")
+            ncov <- ncol(x$cov)
+            re <- x$re
+            nre <- ncol(re)
+            if (ncov - 1 <= 16) 
+                par(mfrow = c(ceiling((ncov - 1)/4), 4))
+            if (ncov - 1 <= 12) 
+                par(mfrow = c(ceiling((ncov - 1)/3), 4))
+            if (ncov - 1 <= 8) 
+                par(mfrow = c(ceiling((ncov - 1)/2), 4))
+            if (ncov - 1 <= 4) 
+                par(mfrow = c(ceiling((ncov - 1)), 1))
+            for (i in 2:nre) {
+                for (j in 2:ncov) {
+                  plot(x$cov[, j], re[, i], xlab = x$nameData$covnames[j - 
+                    1], ylab = x$nameData$reparams[i - 1])
+                  abline(h = 0)
+                }
             }
         }
-      }
-re.cov<-re.covPre(x)   
-   }
-
-
-diagtrplotp.Pre<- function (x)  function(){
-    dat <- x$pred
-    library(lattice)
-    typedv <- rep(1, length(dat$ID))
-    typepred <- rep(2, length(dat$ID))
-    dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv) 
-    preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
-    #preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
-    plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
-    newid <- factor(plotdata$id)
-    sps <- trellis.par.get("superpose.symbol")
-    sps$pch <- 1:7
-    trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
-        xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, span = 2, layout = c(4, 
-            4, pages), aspect = 1, type = "b", panel = "panel.superpose", 
-        panel.group = "panel.xyplot", key = list(columns = 2, 
-            text = list(paste(c("Values:  Observed", " Predicted"))), 
-            points = Rows(sps, 1:2))))
-}
-diagtrplotp<-diagtrplotp.Pre(x)
-
-diagtrploti.Pre<- function (x)  function(){
-    dat <- x$pred
-    library(lattice)
-    typedv <- rep(1, length(dat$ID))
-    typepred <- rep(2, length(dat$ID))
-    dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv) 
-    #preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
-    preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
-    plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
-    newid <- factor(plotdata$id)
-    sps <- trellis.par.get("superpose.symbol")
-    sps$pch <- 1:7
-    trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
-        xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, span = 2, layout = c(4, 
-            4, pages), aspect = 1, type = "b", panel = "panel.superpose", 
-        panel.group = "panel.xyplot", key = list(columns = 2, 
-            text = list(paste(c("Values:  Observed", " Predicted"))), 
-            points = Rows(sps, 1:2))))
-}
-diagtrploti<-diagtrploti.Pre(x)
-
-HTMLInitFile(outdir=nameDir, file=nameFile$file, extension="html", BackGroundColor="#E9967A")
- file.app<-paste(nameFile$file,".html",sep="")
-         HTML.title("Results from NONMEM", HR=3,file=file.app)
-         HTML(NMparam, caption="Population Parameter Estimates",file = file.app)
-         HTML(AIC.table, caption="Model Selection Criteria", file = file.app)
-         HTML(ip.desc, caption = "Descriptive statistics for Individual Parameters",file = file.app)
-    if (!is.null(x$cov))
+        re.cov <- re.covPre(x)
+    }
+    diagtrplotp.Pre <- function(x) function() {
+        dat <- x$pred
+        library(lattice)
+        typedv <- rep(1, length(dat$ID))
+        typepred <- rep(2, length(dat$ID))
+        dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv)
+        preddata <- cbind(dat$ID, dat$TIME, dat$PRED, typepred)
+        plotdata <- as.data.frame(rbind(dvdata, preddata))
+        names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+        newid <- factor(plotdata$id)
+        sps <- trellis.par.get("superpose.symbol")
+        sps$pch <- 1:7
+        trellis.par.set("superpose.symbol", sps)
+        print(xyplot(dv.pred ~ time | newid, data = plotdata, 
+            groups = typepred, xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, 
+            span = 2, layout = c(4, 4, pages), aspect = 1, type = "b", 
+            panel = "panel.superpose", panel.group = "panel.xyplot", 
+            key = list(columns = 2, text = list(paste(c("Values:  Observed", 
+                " Predicted"))), points = Rows(sps, 1:2))))
+    }
+    diagtrplotp <- diagtrplotp.Pre(x)
+    diagtrploti.Pre <- function(x) function() {
+        dat <- x$pred
+        library(lattice)
+        typedv <- rep(1, length(dat$ID))
+        typepred <- rep(2, length(dat$ID))
+        dvdata <- cbind(dat$ID, dat$TIME, dat$CONC, typedv)
+        preddata <- cbind(dat$ID, dat$TIME, dat$IPRE, typepred)
+        plotdata <- as.data.frame(rbind(dvdata, preddata))
+        names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+        newid <- factor(plotdata$id)
+        sps <- trellis.par.get("superpose.symbol")
+        sps$pch <- 1:7
+        trellis.par.set("superpose.symbol", sps)
+        print(xyplot(dv.pred ~ time | newid, data = plotdata, 
+            groups = typepred, xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, 
+            span = 2, layout = c(4, 4, pages), aspect = 1, type = "b", 
+            panel = "panel.superpose", panel.group = "panel.xyplot", 
+            key = list(columns = 2, text = list(paste(c("Values:  Observed", 
+                " Predicted"))), points = Rows(sps, 1:2))))
+    }
+    diagtrploti <- diagtrploti.Pre(x)
+    HTMLInitFile(outdir = nameDir, file = nameFile$file, extension = "html", 
+        BackGroundColor = "#E9967A")
+    file.app <- paste(nameFile$file, ".html", sep = "")
+    HTML.title("Results from NONMEM", HR = 3, file = file.app)
+    HTML(NMparam, caption = "Population Parameter Estimates", 
+        file = file.app)
+    HTML(AIC.table, caption = "Model Selection Criteria", file = file.app)
+    HTML(ip.desc, caption = "Descriptive statistics for Individual Parameters", 
+        file = file.app)
+    if (!is.null(x$cov)) 
         HTML(cov.desc, caption = "Covariates", file = file.app)
-         HTMLplot(Caption="Trellis Plots", plotFunction=plot.Tr, GraphFileName="plot.Tr", GraphSaveAs="png", append=TRUE, file=file.app)    
-         HTMLplot(Caption="Predicted vs Observed and Residual vs Predicted Plots", plotFunction=dplot, GraphFileName="dplot", GraphSaveAs="png", append=TRUE, file=file.app)
-         HTMLplot(Caption="QQplots:Stage I Model, QQplots provide a visual assessment of normality", plotFunction=qplot, GraphFileName="qplot", GraphSaveAs="png", append=TRUE, file=file.app)
-         HTMLplot(Caption="QQPlots: Stage II Model", plotFunction=qplot.re, GraphFileName="qplot.re", GraphSaveAs="png", append=TRUE, file=file.app)
- if (!is.null(x$cov.id)) HTMLplot(Caption="Individual Random effects vs Covariates", plotFunction=re.cov, GraphFileName="re.cov", GraphSaveAs="png", append=TRUE, file=file.app)        
-         HTMLplot(Caption ="Individual Predicted and Observed Values vs Time",plotFunction=diagtrploti,GraphFileName="diagtrploti", GraphSaveAs="png", append=TRUE, file=file.app)    
-         HTMLplot(Caption = "Population Predicted and Observed Values vs Time",plotFunction=diagtrplotp,GraphFileName="diagtrplotp", GraphSaveAs="png", append=TRUE, file=file.app)    
-HTMLEndFile()
-     }
+    HTMLplot(Caption = "Trellis Plots", plotFunction = plot.Tr, 
+        GraphFileName = "plot.Tr", GraphSaveAs = "png", append = TRUE, 
+        file = file.app)
+    HTMLplot(Caption = "Predicted vs Observed and Residual vs Predicted Plots", 
+        plotFunction = dplot, GraphFileName = "dplot", GraphSaveAs = "png", 
+        append = TRUE, file = file.app)
+    HTMLplot(Caption = "QQplots:Stage I Model, QQplots provide a visual assessment of normality", 
+        plotFunction = qplot, GraphFileName = "qplot", GraphSaveAs = "png", 
+        append = TRUE, file = file.app)
+    HTMLplot(Caption = "QQPlots: Stage II Model", plotFunction = qplot.re, 
+        GraphFileName = "qplot.re", GraphSaveAs = "png", append = TRUE, 
+        file = file.app)
+    if (!is.null(x$cov.id)) 
+        HTMLplot(Caption = "Individual Random effects vs Covariates", 
+            plotFunction = re.cov, GraphFileName = "re.cov", 
+            GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLplot(Caption = "Individual Predicted and Observed Values vs Time", 
+        plotFunction = diagtrploti, GraphFileName = "diagtrploti", 
+        GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLplot(Caption = "Population Predicted and Observed Values vs Time", 
+        plotFunction = diagtrplotp, GraphFileName = "diagtrplotp", 
+        GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLEndFile()
+}
 
 
-HTMLtools.WinBUGS<-function (x = x, nameDir = nameDir, nameFile = nameFile,
-    descStructure = list(pcts = c(0.025, 0.05, 0.95, 0.975),
-        nsig = 4), ...)
+
+HTMLtools.WinBUGS<-function (x = x, nameDir=nameDir, nameFile = nameFile, descStructure = list(pcts = c(0.025, 0.05, 0.95, 0.975), nsig = 4), ...) 
 {
     library(R2HTML)
     cat("Results written to", nameDir, "\n")
     pages <- round(length(unique(x$pred$id))/16)
     if (!is.null(x$cov.id)) {
-        cov.desc <- t(apply(x$cov.id[, ], 2, desc, pcts = descStructure$pcts,
+        cov.desc <- t(apply(x$cov.id[, ], 2, desc, pcts = descStructure$pcts, 
             nsig = descStructure$nsig))
         cov.desc <- data.frame(cov.desc[-c(1), , drop = FALSE])
         names(cov.desc) <- gsub("X", " ", names(cov.desc))
         row.names(cov.desc) <- x$nameData$covnames
     }
-    
     cnt <- 6 + length(descStructure$pcts)
     lp <- length(x$nameData$params)
     i <- 1
     j <- 1
-    var.table <- desc(x$sims.list$itau[, i, j], pcts = descStructure$pcts,
+    var.table <- desc(x$sims.list$itau[, i, j], pcts = descStructure$pcts, 
         nsig = descStructure$nsig)
     for (i in 1:lp) {
         for (j in 1:lp) {
-            if (i == 1 && j == 1)
-                var.table <- desc(x$sims.list$itau[, i, j], pcts = descStructure$pcts,
+            if (i == 1 && j == 1) 
+                var.table <- desc(x$sims.list$itau[, i, j], pcts = descStructure$pcts, 
                   nsig = descStructure$nsig)
-            else var.table <- rbind(var.table, desc(x$sims.list$itau[,
+            else var.table <- rbind(var.table, desc(x$sims.list$itau[, 
                 i, j], pcts = descStructure$pcts))
         }
     }
@@ -1746,14 +1725,14 @@ HTMLtools.WinBUGS<-function (x = x, nameDir = nameDir, nameFile = nameFile,
     names(var.table) <- gsub("X", " ", names(var.table))
     var.table <- as.matrix(var.table)
     var.table <- formatC(var.table, format = "fg", digits = 3)
-    sigma.table <- t(desc(x$sims.list$sigma2, pcts = descStructure$pcts,
+    sigma.table <- t(desc(x$sims.list$sigma2, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
     sigma.table <- data.frame(sigma.table[, , drop = FALSE])
     names(sigma.table) <- gsub("X", " ", names(sigma.table))
     row.names(sigma.table) <- c("Sigma2")
     sigma.table <- as.matrix(cbind(sigma.table))
     sigma.table <- formatC(sigma.table, format = "fg", digits = 3)
-    mu.table <- t(apply(x$sims.list$mu[, ], 2, desc, pcts = descStructure$pcts,
+    mu.table <- t(apply(x$sims.list$mu[, ], 2, desc, pcts = descStructure$pcts, 
         nsig = descStructure$nsig))
     mu.table <- data.frame(mu.table)
     names(mu.table) <- gsub("X", " ", names(mu.table))
@@ -1762,186 +1741,190 @@ HTMLtools.WinBUGS<-function (x = x, nameDir = nameDir, nameFile = nameFile,
     mu.table <- formatC(mu.table, format = "fg", digits = 3)
     tableList <- list()
     for (k in 1:lp) {
-        tableList[[x$nameData$tparams[k]]] <- t(apply(x$sims.list$beta[,
+        tableList[[x$nameData$tparams[k]]] <- t(apply(x$sims.list$beta[, 
             , k], 2, desc, pcts = descStructure$pcts, nsig = descStructure$nsig))
     }
     for (k in 1:lp) {
         tableList[[x$nameData$tparams[k]]] <- data.frame(tableList[[x$nameData$tparams[k]]])
-        names(tableList[[x$nameData$tparams[k]]]) <- gsub("X",
+        names(tableList[[x$nameData$tparams[k]]]) <- gsub("X", 
             " ", names(tableList[[x$nameData$tparams[k]]]))
     }
-        
-plotFun<-function(x, f) f(x)
-
-densities.Pre<-function(x) function(){
-count <- ncol(x$sims.list$mu)
-    if (count <= 16)
-        par(mfrow = c(ceiling(count/4), 4), mar = c(4, 2, 3,
-            2), bg = "grey")
-    if (count <= 12)
-        par(mfrow = c(ceiling(count/3), 3), mar = c(4, 2, 3,
-            2), bg = "grey")
-    if (count <= 8)
-        par(mfrow = c(ceiling(count/2), 2), mar = c(4, 2, 3,
-            2), bg = "grey")
-    if (count <= 4)
-        par(mfrow = c(count, 1), mar = c(4, 2, 3, 2), bg = "grey")
-    for (i in 1:count) {
-        plot(density(x$sims.list$mu[, i]), main = x$nameData$coef[i])
-        abline(v = x$mean$mu[i])
-    }
-}
-
-plot.densities<-densities.Pre(x)
-
-plot.TrPre<- function(x) function(){
-    library(lattice)
-    dat <- x$pred
-    ID <- as.factor(dat$id)
-    print(xyplot(conc ~ time | ID, data = dat, xlab = x$nameData$xvarlab, xlim = c(-1, 
-        max(time)), ylab = x$nameData$yvarlab, ylim = c(min(dat$conc), max(dat$conc)), 
-        span = 2, layout = c(4, 4, 1), aspect = 1, panel = function(x, 
-            y, span) {
-            panel.xyplot(x, y, col = "black", cex = 1.2, type = "b")
-        }))
-}
-plot.Tr = plot.TrPre(x)
-
-qplot.Pre<-function(x) function(){
-  par(mfrow = c(2, 1), mar = c(4, 5, 3, 5), bg = "grey")
-    qqnorm(x$pred$presid, main = "Residuals from population model")
-    qqline(x$pred$presid)
-    qqnorm(x$pred$iresid, main = "Residuals from individual model")
-    qqline(x$pred$iresid)
-}
-qplot<-qplot.Pre(x)
-
-qplot.rePre<-function(x) function(){
-    re <- x$mean$re
-    nre <- ncol(re)
-    par(mfrow = c(nre, 1), mar = c(4, 5, 3, 5), bg="grey")
-    for (i in 1:nre) {
-        qqnorm(re[, i], main = paste("Random effects for log(",
-            x$nameData$reparams[i], ")", sep = ""))
-        qqline(re[, i])
-    }
-}
-qplot.re<-qplot.rePre(x)
-
-if (!is.null(x$cov.id)){
-re.covPre<-function(x)function(){
-    par(bg="grey")
-    re <- x$mean$re
-    nre <- ncol(re)
-    ncov <- ncol(x$cov.id)
-    if (ncov-1<=16)
-       par(mfrow=c(ceiling((ncov-1)/4),4))
-    if (ncov-1<=12)
-       par(mfrow=c(ceiling((ncov-1)/3),4))
-    if (ncov-1<=8)
-       par(mfrow=c(ceiling((ncov-1)/2),4))
-    if (ncov-1<=4)
-       par(mfrow=c(ceiling((ncov-1)),1))
-    for (i in 1:nre) {
-       for (j in 2:ncov) {  
-            plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j -
-                1], ylab = x$nameData$reparams[i])
-            abline(h = 0)
+    plotFun <- function(x, f) f(x)
+    densities.Pre <- function(x) function() {
+        count <- ncol(x$sims.list$mu)
+        if (count <= 16) 
+            par(mfrow = c(ceiling(count/4), 4), mar = c(4, 2, 
+                3, 2), bg = "grey")
+        if (count <= 12) 
+            par(mfrow = c(ceiling(count/3), 3), mar = c(4, 2, 
+                3, 2), bg = "grey")
+        if (count <= 8) 
+            par(mfrow = c(ceiling(count/2), 2), mar = c(4, 2, 
+                3, 2), bg = "grey")
+        if (count <= 4) 
+            par(mfrow = c(count, 1), mar = c(4, 2, 3, 2), bg = "grey")
+        for (i in 1:count) {
+            plot(density(x$sims.list$mu[, i]), main = x$nameData$coef[i])
+            abline(v = x$mean$mu[i])
         }
-   }
-   }
-re.cov<-re.covPre(x)
-   }
-
-dplot.Pre<-function(x) function() diagplot(x)
-dplot<-dplot.Pre(x)
-
-diagtrploti.Pre<- function (x)  function()
-{
-  trdata <- x$pred
-    library(lattice)
-    typedv <- rep(1, length(trdata$id))
-    typepred <- rep(2, length(trdata$id))
-    dvdata <- cbind(trdata$id, trdata$time, trdata$conc, typedv)
-    preddata <- cbind(trdata$id, trdata$time, trdata$ipred, typepred)
-    plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
-    newid <- factor(plotdata$id)
-    sps <- trellis.par.get("superpose.symbol")
-    sps$pch <- 1:7
-    trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
-        xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, span = 2, layout = c(4, 
-            4, pages), aspect = 1, type = "b", panel = "panel.superpose", 
-        panel.group = "panel.xyplot", key = list(columns = 2, 
-            text = list(paste(c("Values:  Observed", " Predicted"))), 
-            points = Rows(sps, 1:2))))
-}
-diagtrploti<-diagtrploti.Pre(x)
-
-diagtrplotp.Pre<- function (x)  function()
-{
-  trdata <- x$pred
-    library(lattice)
-    typedv <- rep(1, length(trdata$id))
-    typepred <- rep(2, length(trdata$id))
-    dvdata <- cbind(trdata$id, trdata$time, trdata$conc, typedv)
-    preddata <- cbind(trdata$id, trdata$time, trdata$ppred, typepred)
-    plotdata <- as.data.frame(rbind(dvdata, preddata))
-    names(plotdata) <- c("id", "time", "dv.pred", "typepred")
-    newid <- factor(plotdata$id)
-    sps <- trellis.par.get("superpose.symbol")
-    sps$pch <- 1:7
-    trellis.par.set("superpose.symbol", sps)
-    print(xyplot(dv.pred ~ time | newid, data = plotdata, groups = typepred, 
-        xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, span = 2, layout = c(4, 
-            4, pages), aspect = 1, type = "b", panel = "panel.superpose", 
-        panel.group = "panel.xyplot", key = list(columns = 2, 
-            text = list(paste(c("Values:  Observed", " Predicted"))), 
-            points = Rows(sps, 1:2))))
-}
-diagtrplotp<-diagtrplotp.Pre(x)
-
-HTMLInitFile(outdir=nameDir, file=nameFile&file, extension="html", BackGroundColor="#E9967A")
- file.app<-paste(nameFile$file,".html",sep="")
- HTML.title("Results from WinBUGS", HR = 3, file = file.app)
+    }
+    plot.densities <- densities.Pre(x)
+    plot.TrPre <- function(x) function() {
+        library(lattice)
+        dat <- x$pred
+        ID <- as.factor(dat$id)
+        print(xyplot(conc ~ time | ID, data = dat, xlab = x$nameData$xvarlab, 
+            xlim = c(-1, max(time)), ylab = x$nameData$yvarlab, 
+            ylim = c(min(dat$conc), max(dat$conc)), span = 2, 
+            layout = c(4, 4, 1), aspect = 1, panel = function(x, 
+                y, span) {
+                panel.xyplot(x, y, col = "black", cex = 1.2, 
+                  type = "b")
+            }))
+    }
+    plot.Tr = plot.TrPre(x)
+    qplot.Pre <- function(x) function() {
+        par(mfrow = c(2, 1), mar = c(4, 5, 3, 5), bg = "grey")
+        qqnorm(x$pred$presid, main = "Residuals from population model")
+        qqline(x$pred$presid)
+        qqnorm(x$pred$iresid, main = "Residuals from individual model")
+        qqline(x$pred$iresid)
+    }
+    qplot <- qplot.Pre(x)
+    qplot.rePre <- function(x) function() {
+        re <- x$mean$re
+        nre <- ncol(re)
+        par(mfrow = c(nre, 1), mar = c(4, 5, 3, 5), bg = "grey")
+        for (i in 1:nre) {
+            qqnorm(re[, i], main = paste("Random effects for log(", 
+                x$nameData$reparams[i], ")", sep = ""))
+            qqline(re[, i])
+        }
+    }
+    qplot.re <- qplot.rePre(x)
+    if (!is.null(x$cov.id)) {
+        re.covPre <- function(x) function() {
+            par(bg = "grey")
+            re <- x$mean$re
+            nre <- ncol(re)
+            ncov <- ncol(x$cov.id)
+            if (ncov - 1 <= 16) 
+                par(mfrow = c(ceiling((ncov - 1)/4), 4))
+            if (ncov - 1 <= 12) 
+                par(mfrow = c(ceiling((ncov - 1)/3), 4))
+            if (ncov - 1 <= 8) 
+                par(mfrow = c(ceiling((ncov - 1)/2), 4))
+            if (ncov - 1 <= 4) 
+                par(mfrow = c(ceiling((ncov - 1)), 1))
+            for (i in 1:nre) {
+                for (j in 2:ncov) {
+                  plot(x$cov.id[, j], re[, i], xlab = x$nameData$covnames[j - 
+                    1], ylab = x$nameData$reparams[i])
+                  abline(h = 0)
+                }
+            }
+        }
+        re.cov <- re.covPre(x)
+    }
+    dplot.Pre <- function(x) function() diagplot(x)
+    dplot <- dplot.Pre(x)
+    diagtrploti.Pre <- function(x) function() {
+        trdata <- x$pred
+        library(lattice)
+        typedv <- rep(1, length(trdata$id))
+        typepred <- rep(2, length(trdata$id))
+        dvdata <- cbind(trdata$id, trdata$time, trdata$conc, 
+            typedv)
+        preddata <- cbind(trdata$id, trdata$time, trdata$ipred, 
+            typepred)
+        plotdata <- as.data.frame(rbind(dvdata, preddata))
+        names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+        newid <- factor(plotdata$id)
+        sps <- trellis.par.get("superpose.symbol")
+        sps$pch <- 1:7
+        trellis.par.set("superpose.symbol", sps)
+        print(xyplot(dv.pred ~ time | newid, data = plotdata, 
+            groups = typepred, xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, 
+            span = 2, layout = c(4, 4, pages), aspect = 1, type = "b", 
+            panel = "panel.superpose", panel.group = "panel.xyplot", 
+            key = list(columns = 2, text = list(paste(c("Values:  Observed", 
+                " Predicted"))), points = Rows(sps, 1:2))))
+    }
+    diagtrploti <- diagtrploti.Pre(x)
+    diagtrplotp.Pre <- function(x) function() {
+        trdata <- x$pred
+        library(lattice)
+        typedv <- rep(1, length(trdata$id))
+        typepred <- rep(2, length(trdata$id))
+        dvdata <- cbind(trdata$id, trdata$time, trdata$conc, 
+            typedv)
+        preddata <- cbind(trdata$id, trdata$time, trdata$ppred, 
+            typepred)
+        plotdata <- as.data.frame(rbind(dvdata, preddata))
+        names(plotdata) <- c("id", "time", "dv.pred", "typepred")
+        newid <- factor(plotdata$id)
+        sps <- trellis.par.get("superpose.symbol")
+        sps$pch <- 1:7
+        trellis.par.set("superpose.symbol", sps)
+        print(xyplot(dv.pred ~ time | newid, data = plotdata, 
+            groups = typepred, xlab = x$nameData$xvarlab, ylab = x$nameData$yvarlab, 
+            span = 2, layout = c(4, 4, pages), aspect = 1, type = "b", 
+            panel = "panel.superpose", panel.group = "panel.xyplot", 
+            key = list(columns = 2, text = list(paste(c("Values:  Observed", 
+                " Predicted"))), points = Rows(sps, 1:2))))
+    }
+    diagtrplotp <- diagtrplotp.Pre(x)
+    HTMLInitFile(outdir = nameDir, file = nameFile & file, extension = "html", 
+        BackGroundColor = "#E9967A")
+    file.app <- paste(nameFile$file, ".html", sep = "")
+    HTML.title("Results from WinBUGS", HR = 3, file = file.app)
     HTML(mu.table, caption = "Population Mean Estimates", file = file.app)
-    HTML(var.table, caption = "Population Variance Estimates",
+    HTML(var.table, caption = "Population Variance Estimates", 
         file = file.app)
-    HTML(sigma.table, caption = "Intrasubject Variance Estimate",
+    HTML(sigma.table, caption = "Intrasubject Variance Estimate", 
         file = file.app)
     for (k in 1:lp) {
         mn.ind <- min(50, data$data$n.ind)
-        HTML(tableList[[x$nameData$tparams[k]]][1:mn.ind, ], caption = paste("Individual(",
-            x$nameData$tparams[k], ")", sep = ""), file = file.app)
+        HTML(tableList[[x$nameData$tparams[k]]][1:mn.ind, ], 
+            caption = paste("Individual(", x$nameData$tparams[k], 
+                ")", sep = ""), file = file.app)
     }
-    if (!is.null(x$cov.id))
+    if (!is.null(x$cov.id)) 
         HTML(cov.desc, caption = "Covariates", file = file.app)
-HTMLplot(Caption = "Densities of the population parameter estimates",plotFunction=plot.densities, GraphFileName="plot.densities", GraphSaveAs="png", append=TRUE, 
-         file=file.app)
-HTMLplot(Caption="Trellis Plots", plotFunction=plot.Tr, GraphFileName="plot.Tr", GraphSaveAs="png", append=TRUE, 
-         file=file.app)
-HTMLplot(Caption="Predicted vs Observed and Residual vs Predicted Plots", plotFunction=dplot, GraphFileName="dplot", 
-         GraphSaveAs="png", append=TRUE, file=file.app)
-HTMLplot(Caption="QQplots:Stage I Model, QQplots provide a visual assessment of normality", plotFunction=qplot, 
-         GraphFileName="qplot", GraphSaveAs="png", append=TRUE, file=file.app)
-HTMLplot(Caption="QQPlots: Stage II Model", plotFunction=qplot.re, GraphFileName="qplot.re", GraphSaveAs="png", 
-         append=TRUE, file=file.app)
-if (!is.null(x$cov.id)) HTMLplot(Caption="Individual Random effects vs Covariates", plotFunction=re.cov, GraphFileName="re.cov", 
- GraphSaveAs="png", append=TRUE, file=file.app)
-HTMLplot(Caption ="Individual Predicted and Observed Values vs Time",plotFunction=diagtrploti,GraphFileName="diagtrploti", 
-         GraphSaveAs="png", append=TRUE, file=file.app)
-HTMLplot(Caption = "Population Predicted and Observed Values vs Time",plotFunction=diagtrplotp,GraphFileName="diagtrplotp", GraphSaveAs="png", append=TRUE, file=file.app)
-HTMLEndFile()    
+    HTMLplot(Caption = "Densities of the population parameter estimates", 
+        plotFunction = plot.densities, GraphFileName = "plot.densities", 
+        GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLplot(Caption = "Trellis Plots", plotFunction = plot.Tr, 
+        GraphFileName = "plot.Tr", GraphSaveAs = "png", append = TRUE, 
+        file = file.app)
+    HTMLplot(Caption = "Predicted vs Observed and Residual vs Predicted Plots", 
+        plotFunction = dplot, GraphFileName = "dplot", GraphSaveAs = "png", 
+        append = TRUE, file = file.app)
+    HTMLplot(Caption = "QQplots:Stage I Model, QQplots provide a visual assessment of normality", 
+        plotFunction = qplot, GraphFileName = "qplot", GraphSaveAs = "png", 
+        append = TRUE, file = file.app)
+    HTMLplot(Caption = "QQPlots: Stage II Model", plotFunction = qplot.re, 
+        GraphFileName = "qplot.re", GraphSaveAs = "png", append = TRUE, 
+        file = file.app)
+    if (!is.null(x$cov.id)) 
+        HTMLplot(Caption = "Individual Random effects vs Covariates", 
+            plotFunction = re.cov, GraphFileName = "re.cov", 
+            GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLplot(Caption = "Individual Predicted and Observed Values vs Time", 
+        plotFunction = diagtrploti, GraphFileName = "diagtrploti", 
+        GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLplot(Caption = "Population Predicted and Observed Values vs Time", 
+        plotFunction = diagtrplotp, GraphFileName = "diagtrplotp", 
+        GraphSaveAs = "png", append = TRUE, file = file.app)
+    HTMLEndFile()
 }
-    
-HTMLtools<-function (x = x, nameDir= nameDir, nameFile = nameFile, descStructure = descStructure,...)
+
+
+HTMLtools<-function(x,nameDir, nameFile, descStructure, ...)
 UseMethod("HTMLtools")
 
-HTMLtools.default <- function (x = x, nameDir= nameDir, 
-nameFile = nameFile, descStructure = descStructure,...)
-stop(paste("HTMLtools method does not yet exist for instances of class",
-class(x)))
+HTMLtools.default <- function(x,nameDir, nameFile, descStructure, ...)
+stop(paste("HTMLtools method does not yet exist for instances of class", class(x)))
 
 
 #####################################################
@@ -2040,7 +2023,7 @@ bugs.plot <- function (sims, model.file, n.chains, n.iter, n.burnin, n.thin,
             n.burnin, " discarded)", sep = "")
         if (n.thin > 1)
             cat(", n.thin =", n.thin)
-        cat("\n n.sims =",sims$n.sims, "iterations saved\n")
+        cat("\n n.sims =", n.sims, "iterations saved\n")
         print(difftime(end.time, start.time))
         print(round(sims$summary, digits.summary))
         if (!is.null(sims$DIC)) {
@@ -2311,14 +2294,11 @@ bugs.return.settings <- function (bugs.directory)
 bugs.run <- function (n.burnin, bugs.directory, dos.location)
 {
     bugs.update.settings(n.burnin, bugs.directory)
-    inopt=options()
-    on.exit(options(inopt))
-#   options.save <<- options("warn")
-#    options.save options("warn")
+    options.save <<- options("warn")
     options(warn = 2, error = bugs.run.error)
     system(paste(dos.location, "/par", "script.txt"))
     options(error = NULL)
-#    options(options.save)
+    options(options.save)
     bugs.return.settings(bugs.directory)
     if (length(grep("Bugs did not run correctly", scan("coda1.txt",
         character(), quiet = TRUE, sep = "\n"))) > 0)
@@ -2336,9 +2316,7 @@ bugs.run.error <- function ()
         "If that does not work, try\n", "  dos.location = \"c:/progra~1/winbug~3/winbug~1\"\n",
         "(There is some problem with accessing files in MS-DOS and Windows.)\n")
     options(error = NULL)
-#    options(options.save)
-    inopt=options()
-    on.exit(options(inopt))
+    options(options.save)
 }
 bugs.script <- function (parameters.to.save, n.chains, n.iter, n.burnin, n.thin,
     bugs.directory, model.file, debug = FALSE)
@@ -2627,8 +2605,7 @@ decode.parameter.name <- function (a)
     return(list(root = root, dimension = dimension, indexes = indexes))
 }
 
-format.data <- function (x,...) {
-    datalist=x
+format.data <- function (datalist) {
     if (!is.list(datalist) || is.data.frame(datalist))
         stop("Argument to format.data must be a list.")
     n <- length(datalist)
@@ -2696,9 +2673,8 @@ monitor <- function (a, trans = NULL, keep.all = FALSE, Rupper.keep = FALSE)
 
 
 
-round.bugs <- function (x, digits)
+round.bugs <- function (a, digits)
 {
-    a=x
     r <- round(a, digits)
     exponent <- floor(log10(abs(a)))
     number <- abs(a) * 10^-exponent
@@ -2709,18 +2685,14 @@ round.bugs <- function (x, digits)
     scientific <- paste(prefix, int.frac, "E", exponent, sep = "")
     return(ifelse(a == 0, zeroes, scientific))
 }
-round.bugs.list <- function (x, digits)
+round.bugs.list <- function (inits, digits)
 {
-    inits=x
     lapply(inits, round.bugs, digits)
 }
-round.sci <- function (x, digits)
+round.sci <- function (a, digits)
 {
-    a=x
     round(a, min(0, digits - 1 - floor(log10(a))))
 }
-
-
 
 write.datafile <- function (datalist, towhere, fill = TRUE) {
     if (!is.list(datalist) || is.data.frame(datalist))

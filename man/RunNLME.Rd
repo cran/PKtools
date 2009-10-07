@@ -1,4 +1,4 @@
-%copyright (c) 2005 MS Blanchard
+%copyright (c) 2009 MS Blanchard
 \name{RunNLME}
 \alias{RunNLME}
 \title{RunNLME}
@@ -47,14 +47,13 @@ Pinheiro, J.C. and Bates, D.M. (2000). "Mixed-Effects Models in S and SPLUS."
 Springer: New York.
 }
 
-\author{M.S. Blanchard <sblanchard@coh.org>}
+\author{M.S. Blanchard<sblanchard.coh.org>}
 
 
 \seealso{ \code{\link{pk}}, \code{\link{coVar.id}}, \code{\link{RunNM}}, \code{\link{RunWB}}}
 
 \examples{
 #NLME example
-library(PKtools)
 library(nlme) 
 data(Theoph) 
 Theoph<-Theoph[Theoph$Time!=0,]

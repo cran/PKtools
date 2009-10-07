@@ -33,21 +33,21 @@ dos.location="c:/progra~1/winbug~1/winbug~1")
               which will only thin if there are at least 2000 simulations.)}
   \item{debug}{   option to not automatically quit out of WinBugs when the
              script has finished running, so that you can look at what's
-             going on within WinBugs.  (Default is debug=FALSE.)}
+             going on within WinBugs.  (Default is debug=F.)}
   \item{attach.sims}{  option to save all the parameters in parameters.to.save as
                    R objects, overwriting any existing variables with these
-                   names.  (Default is attach.sims=TRUE.)}
+                   names.  (Default is attach.sims=T.)}
   \item{print.summary}{ option to print summary statistics and convergence
-                     information.  (Default is print.summary=TRUE.)}
+                     information.  (Default is print.summary=T.)}
   \item{plot.summary}{option to display summary statistics and convergence
-                    information as a graph.  (Default is plot.summary=TRUE.)}
+                    information as a graph.  (Default is plot.summary=T.)}
   \item{digits.summary}{  rounding for tabular output on the console.
   (Default is to round to 1 decimal place.)}
   \item{display.parallel}{option to display parallel intervals in both halves of
                         the summary plots.  This is a convergence-monitoring
                         tool and is not necessary once you have approximate
                         convergence.  (Default is display.parallel=F.)}
-  \item{DIC}{  option to compute deviance, pD, and DIC.  (Default is DIC=TRUE.)}
+  \item{DIC}{  option to compute deviance, pD, and DIC.  (Default is DIC=T.)}
   \item{bugs.directory}{ bugs.directory}
   \item{dos.location}{ dos.location}
 }
@@ -184,4 +184,5 @@ else{
     }
 }
 }
+
 \keyword{ models }

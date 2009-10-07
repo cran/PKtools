@@ -1,0 +1,57 @@
+#functions
+export(AICcomp)
+export(bugs)
+export(coVar.id)
+export(desc)
+export(diagplot)
+export(diagtrplot)
+export(HTMLtools)
+export(indEst)
+export(obvsprplot)
+export(paramEst)
+export(pk)
+export(PKtools.AIC)
+export(residplot)
+export(RunNLME)
+export(RunNM)
+export(RunWB)
+export(tex)
+export(trplot)
+export(sonecpmt)
+export(lonecpmt)
+
+#importFrom(lattice,nlme,R2HTML,xtable)
+
+##S3 methods
+S3method(print, PKNLME)
+S3method(print, NONMEM)
+S3method(print, WinBUGS)
+
+S3method(diagplot, PKNLME)
+S3method(diagplot, NONMEM)
+S3method(diagplot, WinBUGS)
+
+S3method(diagtrplot, PKNLME)
+S3method(diagtrplot, NONMEM)
+S3method(diagtrplot, WinBUGS)
+
+S3method(residplot, PKNLME)
+S3method(residplot, NONMEM)
+S3method(residplot, WinBUGS)
+
+S3method(obvsprplot, PKNLME)
+S3method(obvsprplot, NONMEM)
+S3method(obvsprplot, WinBUGS)
+
+S3method(trplot, PKNLME)
+S3method(trplot, NONMEM)
+S3method(trplot, WinBUGS)
+
+S3method(HTMLtools, PKNLME)
+S3method(HTMLtools, NONMEM)
+S3method(HTMLtools, WinBUGS)
+
+S3method(tex, PKNLME)
+S3method(tex, NONMEM)
+S3method(tex, WinBUGS)
+
